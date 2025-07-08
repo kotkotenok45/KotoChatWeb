@@ -3,7 +3,7 @@ let username = "";
 
 function connect() {
   username = document.getElementById('username').value;
-  const url = 'https://kotochat-e22r.onrender.com';
+  const url = wsDisplay.textContent.trim();
 
   ws = new WebSocket(url);
   ws.onopen = () => {
