@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -29,7 +29,7 @@
 <div id="sidebar">
   <h3>Мессенджер</h3>
   <input id="usernameInput" placeholder="Имя пользователя" />
-  <input id="ngrokInput" placeholder="URL сервера (например https://kotochat-e22r.onrender.com)" />
+  <input id="ngrokInput" placeholder="WebSocket URL (wss://...)" />
   <div id="groups"></div>
   <button id="connectBtn">Подключиться</button>
   <div id="status" style="margin-top:10px; font-size: 12px; color: lightgray;"></div>
@@ -75,7 +75,7 @@
   const localAudio = document.getElementById('localAudio');
   const remoteAudio = document.getElementById('remoteAudio');
 
-  // Список групп
+  // Список групп (можно добавить динамически)
   const groups = ['Общий', 'Работа', 'Друзья'];
 
   function showStatus(msg) {
@@ -97,7 +97,7 @@
     if (!connected) return alert('Сначала подключитесь');
     if (group === currentGroup) return;
     currentGroup = group;
-    chatHeader.textContent = `Группа: ${group}`;
+    chatHeader.textContent = Группа: ${group};
     messagesDiv.innerHTML = '';
     ws.send(JSON.stringify({ type: 'join', username, group }));
     inputArea.style.display = 'flex';
@@ -108,23 +108,16 @@
     const div = document.createElement('div');
     div.className = 'msg ' + (isYou ? 'you' : 'other');
     const timeStr = new Date(time).toLocaleTimeString();
-    div.textContent = `${usernameMsg}: ${text} (${timeStr})`;
+    div.textContent = ${usernameMsg}: ${text} (${timeStr});
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
   function connect() {
     username = usernameInput.value.trim();
-    let url = ngrokInput.value.trim();
+    const url = ngrokInput.value.trim();
     if (!username) return alert('Введите имя пользователя');
-    if (!url) return alert('Введите URL сервера');
-
-    // Автоматическая замена http/https на ws/wss
-    if (url.startsWith('http://')) {
-      url = url.replace('http://', 'ws://');
-    } else if (url.startsWith('https://')) {
-      url = url.replace('https://', 'wss://');
-    }
+    if (!url) return alert('Введите URL WebSocket');
 
     ws = new WebSocket(url);
     ws.onopen = () => {
@@ -158,7 +151,7 @@
         case 'message':
           addMessage(data.username, data.text, data.username === username, data.timestamp);
           if (data.username !== username && Notification.permission === 'granted') {
-            new Notification(`Новое сообщение в ${currentGroup}`, { body: `${data.username}: ${data.text}` });
+            new Notification(Новое сообщение в ${currentGroup}, { body: ${data.username}: ${data.text} });
           }
           break;
         case 'notification':
@@ -205,7 +198,7 @@
       if (event.candidate) {
         ws.send(JSON.stringify({
           type: 'signal',
-          to: currentGroup,
+          to: currentGroup, // для упрощения — шлём группе, можно улучшить по пользователям
           signalData: { candidate: event.candidate }
         }));
       }
@@ -291,7 +284,7 @@
   callBtn.onclick = startCall;
   hangupBtn.onclick = hangupCall;
 
-  // Запрос разрешения на уведомления
+  // Запросить разрешение на уведомления
   if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
     Notification.requestPermission();
   }
