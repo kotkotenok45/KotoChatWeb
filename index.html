@@ -75,6 +75,10 @@
   const localAudio = document.getElementById('localAudio');
   const remoteAudio = document.getElementById('remoteAudio');
 
+  // Автозаполнение полей
+  ngrokInput.value = 'https://kotochat-e22r.onrender.com';
+  usernameInput.value = 'kotkotenok';
+
   // Список групп (можно добавить динамически)
   const groups = ['Общий', 'Работа', 'Друзья'];
 
@@ -97,7 +101,7 @@
     if (!connected) return alert('Сначала подключитесь');
     if (group === currentGroup) return;
     currentGroup = group;
-    chatHeader.textContent = Группа: ${group};
+    chatHeader.textContent = `Группа: ${group}`;
     messagesDiv.innerHTML = '';
     ws.send(JSON.stringify({ type: 'join', username, group }));
     inputArea.style.display = 'flex';
@@ -108,7 +112,7 @@
     const div = document.createElement('div');
     div.className = 'msg ' + (isYou ? 'you' : 'other');
     const timeStr = new Date(time).toLocaleTimeString();
-    div.textContent = ${usernameMsg}: ${text} (${timeStr});
+    div.textContent = `${usernameMsg}: ${text} (${timeStr})`;
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
@@ -151,7 +155,7 @@
         case 'message':
           addMessage(data.username, data.text, data.username === username, data.timestamp);
           if (data.username !== username && Notification.permission === 'granted') {
-            new Notification(Новое сообщение в ${currentGroup}, { body: ${data.username}: ${data.text} });
+            new Notification(`Новое сообщение в ${currentGroup}`, { body: `${data.username}: ${data.text}` });
           }
           break;
         case 'notification':
@@ -198,7 +202,7 @@
       if (event.candidate) {
         ws.send(JSON.stringify({
           type: 'signal',
-          to: currentGroup, // для упрощения — шлём группе, можно улучшить по пользователям
+          to: currentGroup,
           signalData: { candidate: event.candidate }
         }));
       }
