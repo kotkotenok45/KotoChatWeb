@@ -2,8 +2,9 @@ let ws;
 let username = "";
 
 function connect() {
-  username = document.getElementById('username').value;
-  const url = wsDisplay.textContent.trim();
+    const usernameInput = document.getElementById('usernameInput');
+    const ngrokInput = document.getElementById('ngrokInput');
+
 
   ws = new WebSocket(url);
   ws.onopen = () => {
