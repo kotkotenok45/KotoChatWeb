@@ -28,8 +28,8 @@
 
 <div id="sidebar">
   <h3>Мессенджер</h3>
-    <input id="usernameInput" placeholder="Имя пользователя" />
-    <input id="ngrokInput" placeholder="WebSocket URL (wss://...)" />
+  <input id="usernameInput" placeholder="Имя пользователя" />
+  <input id="ngrokInput" placeholder="WebSocket URL (wss://...)" />
   <div id="groups"></div>
   <button id="connectBtn">Подключиться</button>
   <div id="status" style="margin-top:10px; font-size: 12px; color: lightgray;"></div>
@@ -97,7 +97,7 @@
     if (!connected) return alert('Сначала подключитесь');
     if (group === currentGroup) return;
     currentGroup = group;
-    chatHeader.textContent = `Группа: ${group}`;
+    chatHeader.textContent = Группа: ${group};
     messagesDiv.innerHTML = '';
     ws.send(JSON.stringify({ type: 'join', username, group }));
     inputArea.style.display = 'flex';
@@ -108,7 +108,7 @@
     const div = document.createElement('div');
     div.className = 'msg ' + (isYou ? 'you' : 'other');
     const timeStr = new Date(time).toLocaleTimeString();
-    div.textContent = `${usernameMsg}: ${text} (${timeStr})`;
+    div.textContent = ${usernameMsg}: ${text} (${timeStr});
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
@@ -151,7 +151,7 @@
         case 'message':
           addMessage(data.username, data.text, data.username === username, data.timestamp);
           if (data.username !== username && Notification.permission === 'granted') {
-            new Notification(`Новое сообщение в ${currentGroup}`, { body: `${data.username}: ${data.text}` });
+            new Notification(Новое сообщение в ${currentGroup}, { body: ${data.username}: ${data.text} });
           }
           break;
         case 'notification':
