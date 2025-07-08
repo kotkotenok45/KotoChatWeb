@@ -2,9 +2,8 @@ let ws;
 let username = "";
 
 function connect() {
-    const usernameInput = document.getElementById('usernameInput');
-    const ngrokInput = document.getElementById('ngrokInput');
-
+  username = document.getElementById('username').value;
+  const url = document.getElementById('ngrok').value;
 
   ws = new WebSocket(url);
   ws.onopen = () => {
@@ -18,11 +17,11 @@ function connect() {
     const messages = document.getElementById('messages');
     const div = document.createElement('div');
     div.className = 'message';
-    div.textContent = `${data.name}: ${data.text}`;
+    div.textContent = ${data.name}: ${data.text};
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
 
-    if (data.name !== username) notify(`${data.name}: ${data.text}`);
+    if (data.name !== username) notify(${data.name}: ${data.text});
   };
 }
 
