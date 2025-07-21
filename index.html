@@ -1,272 +1,377 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Кроссплатформенный Мессенджер</title>
-<style>
-  body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; }
-  #sidebar { width: 250px; background: #2f3542; color: white; display: flex; flex-direction: column; padding: 10px; }
-  #sidebar input, #sidebar button { margin-top: 5px; padding: 7px; border-radius: 4px; border: none; }
-  #sidebar input { width: 100%; box-sizing: border-box; }
-  #main { flex: 1; display: flex; flex-direction: column; }
-  #chatHeader { background: #57606f; color: white; padding: 10px; }
-  #messages { flex: 1; overflow-y: auto; padding: 10px; background: #f1f2f6; }
-  .msg { margin: 5px 0; max-width: 60%; padding: 7px 12px; border-radius: 15px; }
-  .msg.you { background: #70a1ff; color: white; align-self: flex-end; margin-left: auto; }
-  .msg.other { background: #dfe4ea; color: #2f3542; align-self: flex-start; margin-right: auto; }
-  #inputArea { display: flex; padding: 10px; background: #dfe4ea; }
-  #inputArea input[type=text] { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; }
-  #inputArea button { margin-left: 10px; padding: 10px 20px; border-radius: 20px; border: none; background: #2ed573; color: white; cursor: pointer; }
-  #groups { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
-  .group-btn { background: #3742fa; border: none; color: white; padding: 5px 10px; border-radius: 15px; cursor: pointer; }
-  #callArea { padding: 10px; background: #ced6e0; display: flex; gap: 10px; align-items: center; }
-  #localAudio, #remoteAudio { display: none; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KotoChat</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #2f3542;
+      --accent: #2ed573;
+      --sidebar: #2f3542;
+      --header: #57606f;
+      --msg-you: #70a1ff;
+      --msg-other: #dfe4ea;
+      --border: #ccc;
+    }
+
+    [data-theme="dark"] {
+      --bg: #1e272e;
+      --text: #ffffff;
+      --accent: #1dd1a1;
+      --sidebar: #2f3542;
+      --header: #3742fa;
+      --msg-you: #2ed573;
+      --msg-other: #57606f;
+      --border: #444;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+    }
+
+    #sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+      gap: 10px;
+    }
+
+    #sidebar input, #sidebar button {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+    }
+
+    #sidebar input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #sidebar button {
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+    }
+
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #chatHeader {
+      background: var(--header);
+      color: white;
+      padding: 10px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      background: var(--bg);
+    }
+
+    .msg {
+      margin: 5px 0;
+      max-width: 70%;
+      padding: 8px 14px;
+      border-radius: 16px;
+      word-wrap: break-word;
+    }
+
+    .msg.you {
+      background: var(--msg-you);
+      color: white;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .msg.other {
+      background: var(--msg-other);
+      color: var(--text);
+      align-self: flex-start;
+      margin-right: auto;
+    }
+
+    #inputArea {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    #inputArea input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    #inputArea button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+    }
+
+    #callArea {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    #themeToggle {
+      font-size: 13px;
+      background: transparent;
+      border: 1px solid white;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #status {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    #authArea {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    audio {
+      display: none;
+    }
+  </style>
 </head>
-<body>
-
-<div id="sidebar">
-  <h3>Мессенджер</h3>
-  <input id="usernameInput" placeholder="Имя пользователя" />
-  <input id="ngrokInput" placeholder="WebSocket URL (wss://...)" />
-  <div id="groups"></div>
-  <button id="connectBtn">Подключиться</button>
-  <div id="status" style="margin-top:10px; font-size: 12px; color: lightgray;"></div>
-</div>
-
-<div id="main">
-  <div id="chatHeader">Выберите группу</div>
-  <div id="messages"></div>
-  <div id="inputArea" style="display:none;">
-    <input id="messageInput" type="text" placeholder="Введите сообщение..." />
-    <button id="sendBtn">Отправить</button>
+<body data-theme="light">
+  <div id="sidebar">
+    <h2>KotoChat</h2>
+    <button id="themeToggle">🌗 Тема</button>
+    <div id="authArea">
+      <input id="userInput" placeholder="Email или номер" />
+      <input id="usernameInput" placeholder="Имя в чате" />
+      <input id="serverInput" placeholder="WebSocket URL" />
+      <button id="loginBtn">Войти</button>
+    </div>
+    <div id="status"></div>
   </div>
-  <div id="callArea" style="display:none;">
-    <button id="callBtn">Позвонить</button>
-    <button id="hangupBtn" disabled>Завершить звонок</button>
-    <audio id="localAudio" autoplay muted></audio>
-    <audio id="remoteAudio" autoplay></audio>
+  <div id="main">
+    <div id="chatHeader">
+      <span id="groupTitle">Не в чате</span>
+      <button id="callBtn">📞</button>
+    </div>
+    <div id="messages"></div>
+    <div id="inputArea" style="display:none;">
+      <input id="messageInput" type="text" placeholder="Введите сообщение..." />
+      <button id="sendBtn">Отправить</button>
+    </div>
+    <div id="callArea" style="display:none;">
+      <button id="hangupBtn">Завершить</button>
+      <audio id="localAudio" autoplay muted></audio>
+      <audio id="remoteAudio" autoplay></audio>
+    </div>
   </div>
-</div>
-
 <script>
-window.addEventListener('DOMContentLoaded', () => {
-  let ws = null;
-  let username = '';
-  let currentGroup = '';
-  let connected = false;
-
+(() => {
+  const userInput = document.getElementById('userInput');
   const usernameInput = document.getElementById('usernameInput');
-  const ngrokInput = document.getElementById('ngrokInput');
-  const connectBtn = document.getElementById('connectBtn');
+  const serverInput = document.getElementById('serverInput');
+  const loginBtn = document.getElementById('loginBtn');
   const status = document.getElementById('status');
-  const groupsDiv = document.getElementById('groups');
-
-  const chatHeader = document.getElementById('chatHeader');
   const messagesDiv = document.getElementById('messages');
+  const groupTitle = document.getElementById('groupTitle');
   const inputArea = document.getElementById('inputArea');
   const messageInput = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
-
-  const callArea = document.getElementById('callArea');
   const callBtn = document.getElementById('callBtn');
   const hangupBtn = document.getElementById('hangupBtn');
   const localAudio = document.getElementById('localAudio');
   const remoteAudio = document.getElementById('remoteAudio');
+  const callArea = document.getElementById('callArea');
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
 
-  // Автовставка
-  ngrokInput.value = 'https://kotochat-e22r.onrender.com';
+  let ws, username, userId, serverUrl;
+  let connected = false;
+  let localStream, peerConnection;
+  const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-  const groups = ['Общий', 'Работа', 'Друзья'];
+  const msgSound = new Audio("data:audio/wav;base64,UklGRhYAAABXQVZFZm10IBAAAAABAAEA..."); // вставь реальный base64
+  const callSound = new Audio("data:audio/wav;base64,UklGRhYAAABXQVZFZm10IBAAAAABAAEA...");
 
-  function showStatus(msg) {
-    status.textContent = msg;
+  function saveCookie(key, value) {
+    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
   }
 
-  function addGroupButtons() {
-    groupsDiv.innerHTML = '';
-    for (const g of groups) {
-      const btn = document.createElement('button');
-      btn.textContent = g;
-      btn.className = 'group-btn';
-      btn.onclick = () => switchGroup(g);
-      groupsDiv.appendChild(btn);
+  function getCookie(key) {
+    const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : '';
+  }
+
+  function initTheme() {
+    const savedTheme = getCookie('theme') || 'light';
+    body.dataset.theme = savedTheme;
+  }
+
+  themeToggle.onclick = () => {
+    const newTheme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+    body.dataset.theme = newTheme;
+    saveCookie('theme', newTheme);
+  };
+
+  function requestNotificationPermission() {
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
     }
   }
 
-  function switchGroup(group) {
-    if (!connected) return alert('Сначала подключитесь');
-    if (group === currentGroup) return;
-    currentGroup = group;
-    chatHeader.textContent = `Группа: ${group}`;
-    messagesDiv.innerHTML = '';
-    ws.send(JSON.stringify({ type: 'join', username, group }));
-    inputArea.style.display = 'flex';
-    callArea.style.display = 'flex';
-  }
-
-  function addMessage(usernameMsg, text, isYou, time) {
+  function showMessage(sender, text, isYou = false) {
     const div = document.createElement('div');
     div.className = 'msg ' + (isYou ? 'you' : 'other');
-    const timeStr = new Date(time).toLocaleTimeString();
-    div.textContent = `${usernameMsg}: ${text} (${timeStr})`;
+    div.textContent = `${sender}: ${text}`;
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    if (!isYou) {
+      msgSound.play().catch(() => {});
+      if (Notification.permission === 'granted') {
+        new Notification(`${sender}`, { body: text });
+      }
+    }
   }
 
-  function connect() {
-    username = usernameInput.value.trim();
-    let url = ngrokInput.value.trim();
-    if (!username) return alert('Введите имя пользователя');
-    if (!url) return alert('Введите URL сервера');
-
-    if (url.startsWith('http://')) {
-      url = url.replace('http://', 'ws://');
-    } else if (url.startsWith('https://')) {
-      url = url.replace('https://', 'wss://');
-    }
-
-    ws = new WebSocket(url);
+  function connectWS() {
+    ws = new WebSocket(serverUrl.replace(/^http/, 'ws'));
     ws.onopen = () => {
       connected = true;
-      showStatus('Подключено');
-      addGroupButtons();
-      inputArea.style.display = 'none';
-      callArea.style.display = 'none';
-    };
-    ws.onerror = (e) => {
-      showStatus('Ошибка подключения');
-      console.error(e);
+      status.textContent = '✅ Подключено';
+      ws.send(JSON.stringify({ type: 'login', username, userId }));
+      groupTitle.textContent = `Чат: Общий`;
+      inputArea.style.display = 'flex';
+      callArea.style.display = 'flex';
     };
     ws.onclose = () => {
+      status.textContent = '❌ Отключено';
       connected = false;
-      showStatus('Отключено');
-      inputArea.style.display = 'none';
-      callArea.style.display = 'none';
-      messagesDiv.innerHTML = '';
-      currentGroup = '';
     };
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      switch(data.type) {
-        case 'history':
-          messagesDiv.innerHTML = '';
-          for (const msg of data.messages) {
-            addMessage(msg.username, msg.text, msg.username === username, msg.timestamp);
-          }
-          break;
+    ws.onmessage = async (e) => {
+      const data = JSON.parse(e.data);
+      switch (data.type) {
         case 'message':
-          addMessage(data.username, data.text, data.username === username, data.timestamp);
-          if (data.username !== username && Notification.permission === 'granted') {
-            new Notification(`Новое сообщение в ${currentGroup}`, { body: `${data.username}: ${data.text}` });
-          }
-          break;
-        case 'notification':
-          addMessage('Система', data.text, false, Date.now());
+          showMessage(data.username, data.text, data.username === username);
           break;
         case 'signal':
-          handleSignal(data);
+          await handleSignal(data);
           break;
       }
     };
   }
 
-  connectBtn.onclick = connect;
+  loginBtn.onclick = () => {
+    userId = userInput.value.trim();
+    username = usernameInput.value.trim();
+    serverUrl = serverInput.value.trim();
+
+    if (!userId || !username || !serverUrl) {
+      alert('Заполните все поля');
+      return;
+    }
+
+    saveCookie('userId', userId);
+    saveCookie('username', username);
+    saveCookie('serverUrl', serverUrl);
+
+    connectWS();
+    requestNotificationPermission();
+  };
 
   sendBtn.onclick = () => {
     const text = messageInput.value.trim();
-    if (!text) return;
-    ws.send(JSON.stringify({ type: 'message', text }));
-    messageInput.value = '';
+    if (text && connected) {
+      ws.send(JSON.stringify({ type: 'message', text }));
+      showMessage(username, text, true);
+      messageInput.value = '';
+    }
   };
 
   messageInput.onkeyup = (e) => {
     if (e.key === 'Enter') sendBtn.click();
   };
 
-  // WebRTC
-  let localStream = null;
-  let peerConnection = null;
-  const config = {
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-  };
-
   async function startCall() {
-    if (!currentGroup) return alert('Выберите группу');
+    callSound.play().catch(() => {});
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     localAudio.srcObject = localStream;
-    localAudio.style.display = 'block';
     peerConnection = new RTCPeerConnection(config);
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        ws.send(JSON.stringify({
-          type: 'signal',
-          to: currentGroup,
-          signalData: { candidate: event.candidate }
-        }));
+    peerConnection.onicecandidate = e => {
+      if (e.candidate) {
+        ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
       }
     };
 
-    peerConnection.ontrack = (event) => {
-      remoteAudio.srcObject = event.streams[0];
-      remoteAudio.style.display = 'block';
+    peerConnection.ontrack = e => {
+      remoteAudio.srcObject = e.streams[0];
     };
 
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    ws.send(JSON.stringify({
-      type: 'signal',
-      to: currentGroup,
-      signalData: { sdp: peerConnection.localDescription }
-    }));
-
-    callBtn.disabled = true;
+    ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
     hangupBtn.disabled = false;
   }
 
   async function handleSignal(data) {
     if (!peerConnection) {
       peerConnection = new RTCPeerConnection(config);
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          ws.send(JSON.stringify({
-            type: 'signal',
-            to: data.from,
-            signalData: { candidate: event.candidate }
-          }));
+      peerConnection.onicecandidate = e => {
+        if (e.candidate) {
+          ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
         }
       };
-      peerConnection.ontrack = (event) => {
-        remoteAudio.srcObject = event.streams[0];
-        remoteAudio.style.display = 'block';
+      peerConnection.ontrack = e => {
+        remoteAudio.srcObject = e.streams[0];
       };
     }
 
-    if (data.signalData.sdp) {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signalData.sdp));
-      if (data.signalData.sdp.type === 'offer') {
+    const s = data.signalData;
+    if (s.sdp) {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(s.sdp));
+      if (s.sdp.type === 'offer') {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         localAudio.srcObject = localStream;
-        localAudio.style.display = 'block';
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
-        ws.send(JSON.stringify({
-          type: 'signal',
-          to: data.from,
-          signalData: { sdp: peerConnection.localDescription }
-        }));
+        ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
       }
-    } else if (data.signalData.candidate) {
-      try {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(data.signalData.candidate));
-      } catch (e) {
-        console.error(e);
-      }
+    } else if (s.candidate) {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(s.candidate));
     }
   }
 
@@ -277,20 +382,23 @@ window.addEventListener('DOMContentLoaded', () => {
       localStream.getTracks().forEach(track => track.stop());
       localStream = null;
     }
-    localAudio.style.display = 'none';
-    remoteAudio.style.display = 'none';
-    callBtn.disabled = false;
+    localAudio.srcObject = null;
+    remoteAudio.srcObject = null;
     hangupBtn.disabled = true;
   }
 
   callBtn.onclick = startCall;
   hangupBtn.onclick = hangupCall;
 
-  if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-    Notification.requestPermission();
-  }
-});
+  // Загрузка из cookie при старте
+  window.addEventListener('DOMContentLoaded', () => {
+    userInput.value = getCookie('userId') || '';
+    usernameInput.value = getCookie('username') || '';
+    serverInput.value = getCookie('serverUrl') || '';
+    initTheme();
+    requestNotificationPermission();
+  });
+})();
 </script>
-
 </body>
 </html>
