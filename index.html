@@ -1,288 +1,265 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KotoChat</title>
-  <style>
-    :root {
-      --bg: #ffffff;
-      --text: #2f3542;
-      --accent: #2ed573;
-      --sidebar: #2f3542;
-      --header: #57606f;
-      --msg-you: #70a1ff;
-      --msg-other: #dfe4ea;
-      --border: #ccc;
-    }
-
-    [data-theme="dark"] {
-      --bg: #1e272e;
-      --text: #ffffff;
-      --accent: #1dd1a1;
-      --sidebar: #2f3542;
-      --header: #3742fa;
-      --msg-you: #2ed573;
-      --msg-other: #57606f;
-      --border: #444;
-    }
-
-    body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      height: 100vh;
-    }
-
-    #sidebar {
-      width: 260px;
-      background: var(--sidebar);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      padding: 15px;
-      gap: 10px;
-    }
-
-    #sidebar input, #sidebar button {
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 14px;
-    }
-
-    #sidebar input {
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    #sidebar button {
-      background: var(--accent);
-      color: white;
-      cursor: pointer;
-    }
-
-    #main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #chatHeader {
-      background: var(--header);
-      color: white;
-      padding: 10px;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px;
-      background: var(--bg);
-    }
-
-    .msg {
-      margin: 5px 0;
-      max-width: 70%;
-      padding: 8px 14px;
-      border-radius: 16px;
-      word-wrap: break-word;
-    }
-
-    .msg.you {
-      background: var(--msg-you);
-      color: white;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-
-    .msg.other {
-      background: var(--msg-other);
-      color: var(--text);
-      align-self: flex-start;
-      margin-right: auto;
-    }
-
-    #inputArea {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid var(--border);
-      background: var(--bg);
-    }
-
-    #inputArea input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      font-size: 14px;
-    }
-
-    #inputArea button {
-      margin-left: 10px;
-      padding: 10px 20px;
-      border-radius: 20px;
-      border: none;
-      background: var(--accent);
-      color: white;
-      cursor: pointer;
-    }
-
-    #callArea {
-      display: flex;
-      gap: 10px;
-      padding: 10px;
-      border-top: 1px solid var(--border);
-      background: var(--bg);
-    }
-
-    #themeToggle {
-      font-size: 13px;
-      background: transparent;
-      border: 1px solid white;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    #status {
-      font-size: 12px;
-      color: #aaa;
-    }
-
-    #authArea {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    audio {
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KotoChat с ролями</title>
+<style>
+  :root {
+    --bg: #fff;
+    --text: #222;
+    --accent: #2ed573;
+    --sidebar: #2f3542;
+    --header: #57606f;
+    --msg-you: #70a1ff;
+    --msg-other: #dfe4ea;
+    --border: #ccc;
+  }
+  [data-theme="dark"] {
+    --bg: #1e272e;
+    --text: #fff;
+    --accent: #1dd1a1;
+    --sidebar: #2f3542;
+    --header: #3742fa;
+    --msg-you: #2ed573;
+    --msg-other: #57606f;
+    --border: #444;
+  }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+  }
+  #sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #sidebar input, #sidebar button {
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+  }
+  #sidebar input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #sidebar button {
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+  }
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  #chatHeader {
+    background: var(--header);
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--bg);
+  }
+  .msg {
+    margin: 5px 0;
+    max-width: 70%;
+    padding: 8px 14px;
+    border-radius: 16px;
+    word-wrap: break-word;
+  }
+  .msg.you {
+    background: var(--msg-you);
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+  }
+  .msg.other {
+    background: var(--msg-other);
+    color: var(--text);
+    align-self: flex-start;
+    margin-right: auto;
+  }
+  #inputArea {
+    display: none;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  #inputArea input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+  }
+  #inputArea button {
+    margin-left: 10px;
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+  }
+  #callArea {
+    display: none;
+    gap: 10px;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  #themeToggle {
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: flex-start;
+  }
+  audio {
+    display: none;
+  }
+  .role-label {
+    font-weight: bold;
+    margin-right: 6px;
+    color: var(--accent);
+  }
+</style>
 </head>
 <body data-theme="light">
   <div id="sidebar">
     <h2>KotoChat</h2>
     <button id="themeToggle">🌗 Тема</button>
-    <div id="authArea">
-      <input id="userInput" placeholder="Email или номер" />
-      <input id="usernameInput" placeholder="Имя в чате" />
-      <input id="serverInput" placeholder="WebSocket URL" />
-      <button id="loginBtn">Войти</button>
-    </div>
+    <input id="userIdInput" placeholder="Email или номер" />
+    <input id="usernameInput" placeholder="Имя в чате" />
+    <input id="serverInput" placeholder="WebSocket URL" />
+    <button id="loginBtn">Войти</button>
     <div id="status"></div>
   </div>
   <div id="main">
-    <div id="chatHeader">
-      <span id="groupTitle">Не в чате</span>
-      <button id="callBtn">📞</button>
-    </div>
+    <div id="chatHeader">Не в чате</div>
     <div id="messages"></div>
-    <div id="inputArea" style="display:none;">
+    <div id="inputArea">
       <input id="messageInput" type="text" placeholder="Введите сообщение..." />
       <button id="sendBtn">Отправить</button>
     </div>
-    <div id="callArea" style="display:none;">
-      <button id="hangupBtn">Завершить</button>
+    <div id="callArea">
+      <button id="callBtn">📞 Позвонить</button>
+      <button id="hangupBtn" disabled>Завершить</button>
       <audio id="localAudio" autoplay muted></audio>
       <audio id="remoteAudio" autoplay></audio>
     </div>
   </div>
+
 <script>
 (() => {
-  const userInput = document.getElementById('userInput');
+  const userIdInput = document.getElementById('userIdInput');
   const usernameInput = document.getElementById('usernameInput');
   const serverInput = document.getElementById('serverInput');
   const loginBtn = document.getElementById('loginBtn');
   const status = document.getElementById('status');
   const messagesDiv = document.getElementById('messages');
-  const groupTitle = document.getElementById('groupTitle');
+  const chatHeader = document.getElementById('chatHeader');
   const inputArea = document.getElementById('inputArea');
   const messageInput = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
+  const callArea = document.getElementById('callArea');
   const callBtn = document.getElementById('callBtn');
   const hangupBtn = document.getElementById('hangupBtn');
   const localAudio = document.getElementById('localAudio');
   const remoteAudio = document.getElementById('remoteAudio');
-  const callArea = document.getElementById('callArea');
   const themeToggle = document.getElementById('themeToggle');
   const body = document.body;
 
-  let ws, username, userId, serverUrl;
+  let ws;
+  let username = '';
+  let userId = '';
+  let serverUrl = '';
+  let role = 'Гость';
   let connected = false;
   let localStream, peerConnection;
   const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-  const msgSound = new Audio("data:audio/wav;base64,UklGRhYAAABXQVZFZm10IBAAAAABAAEA..."); // вставь реальный base64
-  const callSound = new Audio("data:audio/wav;base64,UklGRhYAAABXQVZFZm10IBAAAAABAAEA...");
-
   function saveCookie(key, value) {
     document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
   }
-
   function getCookie(key) {
     const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
     return match ? decodeURIComponent(match[2]) : '';
   }
 
   function initTheme() {
-    const savedTheme = getCookie('theme') || 'light';
-    body.dataset.theme = savedTheme;
+    const saved = getCookie('theme') || 'light';
+    body.dataset.theme = saved;
   }
-
   themeToggle.onclick = () => {
     const newTheme = body.dataset.theme === 'dark' ? 'light' : 'dark';
     body.dataset.theme = newTheme;
     saveCookie('theme', newTheme);
   };
 
-  function requestNotificationPermission() {
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+  function showStatus(text) {
+    status.textContent = text;
   }
 
-  function showMessage(sender, text, isYou = false) {
+  function addMessage(sender, senderRole, text, isYou) {
     const div = document.createElement('div');
     div.className = 'msg ' + (isYou ? 'you' : 'other');
-    div.textContent = `${sender}: ${text}`;
+
+    let label = '';
+    if(senderRole && senderRole !== 'Пользователь' && senderRole !== 'Гость') {
+      label = `[${senderRole}] `;
+    }
+    div.textContent = `${label}${sender}: ${text}`;
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    if (!isYou) {
-      msgSound.play().catch(() => {});
-      if (Notification.permission === 'granted') {
-        new Notification(`${sender}`, { body: text });
-      }
-    }
   }
 
   function connectWS() {
     ws = new WebSocket(serverUrl.replace(/^http/, 'ws'));
     ws.onopen = () => {
       connected = true;
-      status.textContent = '✅ Подключено';
-      ws.send(JSON.stringify({ type: 'login', username, userId }));
-      groupTitle.textContent = `Чат: Общий`;
-      inputArea.style.display = 'flex';
-      callArea.style.display = 'flex';
+      showStatus('✅ Подключено');
+      ws.send(JSON.stringify({ type: 'join', username, userId }));
+      chatHeader.textContent = `Чат (роль: ${role})`;
+      inputArea.style.display = (role === 'Гость') ? 'none' : 'flex';
+      callArea.style.display = (role === 'Гость') ? 'none' : 'flex';
     };
     ws.onclose = () => {
-      status.textContent = '❌ Отключено';
       connected = false;
+      showStatus('❌ Отключено');
+      chatHeader.textContent = 'Не в чате';
+      inputArea.style.display = 'none';
+      callArea.style.display = 'none';
     };
+    ws.onerror = () => showStatus('Ошибка соединения');
     ws.onmessage = async (e) => {
       const data = JSON.parse(e.data);
-      switch (data.type) {
+      switch(data.type) {
         case 'message':
-          showMessage(data.username, data.text, data.username === username);
+          addMessage(data.username, data.role, data.text, data.username === username);
+          break;
+        case 'notification':
+          addMessage('Система', '', data.text, false);
           break;
         case 'signal':
           await handleSignal(data);
@@ -292,38 +269,40 @@
   }
 
   loginBtn.onclick = () => {
-    userId = userInput.value.trim();
+    userId = userIdInput.value.trim();
     username = usernameInput.value.trim();
     serverUrl = serverInput.value.trim();
-
-    if (!userId || !username || !serverUrl) {
+    if(!userId || !username || !serverUrl) {
       alert('Заполните все поля');
       return;
     }
-
     saveCookie('userId', userId);
     saveCookie('username', username);
     saveCookie('serverUrl', serverUrl);
 
+    // Роли можно определять прямо здесь (клиентская проверка только для UI)
+    // Настоящая проверка будет на сервере
+    const rolesMap = {
+      'creator@example.com': 'Создатель',
+      'admin@example.com': 'Админ',
+      'guest@example.com': 'Гость',
+    };
+    role = rolesMap[userId.toLowerCase()] || 'Пользователь';
+
     connectWS();
-    requestNotificationPermission();
   };
 
   sendBtn.onclick = () => {
     const text = messageInput.value.trim();
-    if (text && connected) {
+    if(text && connected) {
       ws.send(JSON.stringify({ type: 'message', text }));
-      showMessage(username, text, true);
+      addMessage(username, role, text, true);
       messageInput.value = '';
     }
   };
-
-  messageInput.onkeyup = (e) => {
-    if (e.key === 'Enter') sendBtn.click();
-  };
+  messageInput.onkeyup = e => { if(e.key === 'Enter') sendBtn.click(); };
 
   async function startCall() {
-    callSound.play().catch(() => {});
     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     localAudio.srcObject = localStream;
     peerConnection = new RTCPeerConnection(config);
@@ -334,15 +313,14 @@
         ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
       }
     };
-
     peerConnection.ontrack = e => {
       remoteAudio.srcObject = e.streams[0];
     };
 
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
-
     ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+
     hangupBtn.disabled = false;
   }
 
@@ -358,7 +336,6 @@
         remoteAudio.srcObject = e.streams[0];
       };
     }
-
     const s = data.signalData;
     if (s.sdp) {
       await peerConnection.setRemoteDescription(new RTCSessionDescription(s.sdp));
@@ -390,13 +367,11 @@
   callBtn.onclick = startCall;
   hangupBtn.onclick = hangupCall;
 
-  // Загрузка из cookie при старте
   window.addEventListener('DOMContentLoaded', () => {
-    userInput.value = getCookie('userId') || '';
+    userIdInput.value = getCookie('userId') || '';
     usernameInput.value = getCookie('username') || '';
-    serverInput.value = getCookie('serverUrl') || '';
+    serverInput.value = getCookie('serverUrl') || 'https://kotochat-e22r.onrender.com';
     initTheme();
-    requestNotificationPermission();
   });
 })();
 </script>
