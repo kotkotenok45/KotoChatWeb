@@ -1,87 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>KotoChat</title>
   <style>
-    body { font-family: sans-serif; background: #222; color: white; }
-    .hidden { display: none; }
-    .light { background: white; color: black; }
+    body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #f0f0f0; }
+    #sidebar { width: 250px; padding: 10px; background: #ddd; display: flex; flex-direction: column; gap: 10px; }
+    #main { flex: 1; display: flex; flex-direction: column; }
+    #messages { flex: 1; padding: 10px; overflow-y: auto; background: #fff; }
+    input, button { padding: 5px; font-size: 16px; }
+    #chatInput { width: calc(100% - 110px); }
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      #sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-between; gap: 5px; }
+      #sidebar input, #sidebar button { flex: 1 1 48%; }
+    }
   </style>
 </head>
 <body>
-  <h2>KotoChat</h2>
-  <div id="auth">
-    <input id="email" placeholder="Введите email"><br>
-    <button onclick="sendCode()">Получить код</button><br><br>
-    <input id="code" placeholder="Код подтверждения"><br>
-    <button onclick="verifyCode()">Подтвердить</button>
+  <div id="sidebar">
+    <input id="usernameInput" placeholder="Имя / Email" />
+    <input id="passwordInput" placeholder="Пароль" type="password" />
+    <button id="loginBtn">Войти</button>
+    <button id="logoutBtn" style="display:none;">Выйти</button>
   </div>
-
-  <div id="chat" class="hidden">
-    <input id="username" placeholder="Имя">
-    <input id="group" placeholder="Группа">
-    <button onclick="join()">Войти</button><br><br>
+  <div id="main">
     <div id="messages"></div>
-    <input id="input" placeholder="Сообщение...">
-    <button onclick="sendMessage()">Отправить</button>
-    <button onclick="toggleTheme()">🌗</button>
+    <form id="chatForm" style="display:none;">
+      <input id="chatInput" placeholder="Сообщение" autocomplete="off" />
+      <button>Отправить</button>
+    </form>
   </div>
 
   <script>
-    const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
-    let emailVerified = false;
+    const usernameInput = document.getElementById('usernameInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const messages = document.getElementById('messages');
 
-    function sendCode() {
-      fetch('/send-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: document.getElementById('email').value })
-      }).then(() => alert("Код отправлен!"));
-    }
+    let ws;
 
-    function verifyCode() {
-      fetch('/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: document.getElementById('email').value, code: document.getElementById('code').value })
-      }).then(res => {
-        if (res.ok) {
-          document.getElementById('auth').classList.add('hidden');
-          document.getElementById('chat').classList.remove('hidden');
-        } else {
-          alert("Неверный код");
+    loginBtn.onclick = () => {
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!username) return alert("Введите имя!");
+      ws = new WebSocket("wss://kotochat-e22r.onrender.com"); // Авто вставка ws
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'join', username, userId: username, password }));
+        chatForm.style.display = "flex";
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "block";
+      };
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.type === 'message') {
+          const div = document.createElement('div');
+          div.innerHTML = `<b>[${data.role}] ${data.username}:</b> ${data.text}`;
+          messages.appendChild(div);
+          messages.scrollTop = messages.scrollHeight;
+        } else if (data.type === 'notification') {
+          const div = document.createElement('div');
+          div.innerHTML = `<i>${data.text}</i>`;
+          messages.appendChild(div);
         }
-      });
-    }
+      };
+      ws.onclose = () => {
+        chatForm.style.display = "none";
+        loginBtn.style.display = "block";
+        logoutBtn.style.display = "none";
+      };
+    };
 
-    function join() {
-      const username = document.getElementById('username').value;
-      const group = document.getElementById('group').value;
-      ws.send(JSON.stringify({ type: 'join', username, group }));
-    }
+    logoutBtn.onclick = () => {
+      ws.close();
+    };
 
-    function sendMessage() {
-      const text = document.getElementById('input').value;
-      ws.send(JSON.stringify({ type: 'message', text }));
-      document.getElementById('input').value = '';
-    }
-
-    function toggleTheme() {
-      document.body.classList.toggle('light');
-    }
-
-    ws.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      const box = document.getElementById('messages');
-      if (data.type === 'message') {
-        box.innerHTML += `<div><b>${data.username}</b> (${data.role}): ${data.text}</div>`;
-      } else if (data.type === 'notification') {
-        box.innerHTML += `<div><i>${data.text}</i></div>`;
-      } else if (data.type === 'history') {
-        for (const msg of data.messages) {
-          box.innerHTML += `<div><b>${msg.username}</b> (${msg.role || 'Гость'}): ${msg.text}</div>`;
-        }
+    chatForm.onsubmit = (e) => {
+      e.preventDefault();
+      if (chatInput.value.trim()) {
+        ws.send(JSON.stringify({ type: 'message', text: chatInput.value }));
+        chatInput.value = '';
       }
     };
   </script>
