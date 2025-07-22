@@ -1,40 +1,89 @@
-<div id="auth-block">
-  <h2>Подтверждение Email</h2>
-  <input type="email" id="email" placeholder="Введите email" />
-  <button onclick="sendCode()">Отправить код</button>
-  <br>
-  <input type="text" id="code" placeholder="Введите код" />
-  <button onclick="verifyCode()">Подтвердить</button>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>KotoChat</title>
+  <style>
+    body { font-family: sans-serif; background: #222; color: white; }
+    .hidden { display: none; }
+    .light { background: white; color: black; }
+  </style>
+</head>
+<body>
+  <h2>KotoChat</h2>
+  <div id="auth">
+    <input id="email" placeholder="Введите email"><br>
+    <button onclick="sendCode()">Получить код</button><br><br>
+    <input id="code" placeholder="Код подтверждения"><br>
+    <button onclick="verifyCode()">Подтвердить</button>
+  </div>
 
-<script>
-  function sendCode() {
-    const email = document.getElementById('email').value;
-    fetch('/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    }).then(r => r.json()).then(data => {
-      alert(data.message);
-    });
-  }
+  <div id="chat" class="hidden">
+    <input id="username" placeholder="Имя">
+    <input id="group" placeholder="Группа">
+    <button onclick="join()">Войти</button><br><br>
+    <div id="messages"></div>
+    <input id="input" placeholder="Сообщение...">
+    <button onclick="sendMessage()">Отправить</button>
+    <button onclick="toggleTheme()">🌗</button>
+  </div>
 
-  function verifyCode() {
-    const email = document.getElementById('email').value;
-    const code = document.getElementById('code').value;
+  <script>
+    const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+    let emailVerified = false;
 
-    fetch('/verify-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code })
-    }).then(r => r.json()).then(data => {
-      if (data.success) {
-        alert('Подтверждение успешно! Добро пожаловать!');
-        document.getElementById('auth-block').style.display = 'none';
-        // Тут можно показать мессенджер или вызвать initSocket()
-      } else {
-        alert('Неверный код');
+    function sendCode() {
+      fetch('/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: document.getElementById('email').value })
+      }).then(() => alert("Код отправлен!"));
+    }
+
+    function verifyCode() {
+      fetch('/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: document.getElementById('email').value, code: document.getElementById('code').value })
+      }).then(res => {
+        if (res.ok) {
+          document.getElementById('auth').classList.add('hidden');
+          document.getElementById('chat').classList.remove('hidden');
+        } else {
+          alert("Неверный код");
+        }
+      });
+    }
+
+    function join() {
+      const username = document.getElementById('username').value;
+      const group = document.getElementById('group').value;
+      ws.send(JSON.stringify({ type: 'join', username, group }));
+    }
+
+    function sendMessage() {
+      const text = document.getElementById('input').value;
+      ws.send(JSON.stringify({ type: 'message', text }));
+      document.getElementById('input').value = '';
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+    }
+
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      const box = document.getElementById('messages');
+      if (data.type === 'message') {
+        box.innerHTML += `<div><b>${data.username}</b> (${data.role}): ${data.text}</div>`;
+      } else if (data.type === 'notification') {
+        box.innerHTML += `<div><i>${data.text}</i></div>`;
+      } else if (data.type === 'history') {
+        for (const msg of data.messages) {
+          box.innerHTML += `<div><b>${msg.username}</b> (${msg.role || 'Гость'}): ${msg.text}</div>`;
+        }
       }
-    });
-  }
-</script>
+    };
+  </script>
+</body>
+</html>
