@@ -1,95 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>KotoChat</title>
-  <style>
-    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 30px; }
-    #chat { width: 90%; max-width: 600px; height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-    @media (max-width:600px) { body { margin: 10px; } }
-  </style>
-</head>
-<body>
-  <h1>KotoChat</h1>
-  <input id="email" placeholder="Email или номер"><br>
-  <input id="username" placeholder="Имя"><br>
-  <button id="loginBtn">Получить код</button>
-  <div id="chat" hidden></div>
-  <input id="msg" placeholder="Сообщение" hidden>
-  <button id="sendBtn" hidden>Отправить</button>
+<div id="auth-block">
+  <h2>Подтверждение Email</h2>
+  <input type="email" id="email" placeholder="Введите email" />
+  <button onclick="sendCode()">Отправить код</button>
+  <br>
+  <input type="text" id="code" placeholder="Введите код" />
+  <button onclick="verifyCode()">Подтвердить</button>
+</div>
 
-  <script>
-    let ws, userId, username, role;
-    let otpStage = 0;
+<script>
+  function sendCode() {
+    const email = document.getElementById('email').value;
+    fetch('/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    }).then(r => r.json()).then(data => {
+      alert(data.message);
+    });
+  }
 
-    const emailInput = document.getElementById('email');
-    const usernameInput = document.getElementById('username');
-    const loginBtn = document.getElementById('loginBtn');
-    const chatDiv = document.getElementById('chat');
-    const msgInput = document.getElementById('msg');
-    const sendBtn = document.getElementById('sendBtn');
+  function verifyCode() {
+    const email = document.getElementById('email').value;
+    const code = document.getElementById('code').value;
 
-    loginBtn.onclick = () => {
-      userId = emailInput.value.trim();
-      username = usernameInput.value.trim();
-      if (!userId || !username) return alert('Заполни email и имя');
-
-      if (otpStage === 0) {
-        ws = new WebSocket(`ws://${location.host}`);
-        ws.onopen = () => {
-          ws.send(JSON.stringify({ type: 'request_otp', userId }));
-        };
-        ws.onmessage = e => {
-          const data = JSON.parse(e.data);
-          if (data.type === 'otp_sent') {
-            const code = prompt('Введи код из письма');
-            ws.send(JSON.stringify({ type: 'verify_otp', userId, code }));
-          }
-          if (data.type === 'otp_verified') {
-            if (data.success) {
-              ws.send(JSON.stringify({ type: 'join', userId, username }));
-              setupChat();
-              otpStage = 1;
-            } else {
-              alert('Неверный код');
-            }
-          }
-        };
+    fetch('/verify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code })
+    }).then(r => r.json()).then(data => {
+      if (data.success) {
+        alert('Подтверждение успешно! Добро пожаловать!');
+        document.getElementById('auth-block').style.display = 'none';
+        // Тут можно показать мессенджер или вызвать initSocket()
+      } else {
+        alert('Неверный код');
       }
-    };
-
-    function setupChat() {
-      chatDiv.hidden = false;
-      msgInput.hidden = false;
-      sendBtn.hidden = false;
-      loginBtn.hidden = true;
-      emailInput.disabled = true;
-      usernameInput.disabled = true;
-
-      ws.onmessage = e => {
-        const d = JSON.parse(e.data);
-        if (d.type === 'system') addLine(`[СИСТЕМА] ${d.message}`);
-        if (d.type === 'message') {
-          addLine(`[${d.user}] (${d.role}): ${d.text}`);
-        }
-        if (d.type === 'role') {
-          role = d.role;
-          addLine(`[Ты вошёл как ${role}]`);
-        }
-      };
-    }
-
-    sendBtn.onclick = () => {
-      const text = msgInput.value.trim();
-      if (!text) return;
-      ws.send(JSON.stringify({ type: 'message', text }));
-      msgInput.value = '';
-    };
-
-    function addLine(text) {
-      chatDiv.innerHTML += `<div>${text}</div>`;
-      chatDiv.scrollTop = chatDiv.scrollHeight;
-    }
-  </script>
-</body>
-</html>
+    });
+  }
+</script>
