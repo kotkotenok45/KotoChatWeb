@@ -102,7 +102,7 @@
     border-top: 1px solid var(--border);
     background: var(--bg);
   }
-  #inputArea input[type="text"], #inputArea input[type="password"] {
+  #inputArea input[type="text"] {
     flex: 1;
     padding: 10px;
     border-radius: 20px;
@@ -140,7 +140,7 @@
   }
   .role-label {
     font-weight: bold;
-    margin-left: 10px;
+    margin-right: 6px;
     color: var(--accent);
   }
 </style>
@@ -149,7 +149,7 @@
   <div id="sidebar">
     <h2>KotoChat</h2>
     <button id="themeToggle">🌗 Тема</button>
-    <input id="userIdInput" placeholder="Email" />
+    <input id="userIdInput" placeholder="Email или номер" />
     <input id="passwordInput" type="password" placeholder="Пароль" />
     <input id="usernameInput" placeholder="Имя в чате" />
     <input id="serverInput" placeholder="WebSocket URL" />
@@ -162,7 +162,6 @@
     <div id="inputArea">
       <input id="messageInput" type="text" placeholder="Введите сообщение..." />
       <button id="sendBtn">Отправить</button>
-      <span class="role-label" id="roleLabel"></span>
     </div>
     <div id="callArea">
       <button id="callBtn">📞 Позвонить</button>
@@ -191,13 +190,11 @@
   const localAudio = document.getElementById('localAudio');
   const remoteAudio = document.getElementById('remoteAudio');
   const themeToggle = document.getElementById('themeToggle');
-  const roleLabel = document.getElementById('roleLabel');
   const body = document.body;
 
   let ws;
   let username = '';
   let userId = '';
-  let password = '';
   let serverUrl = '';
   let role = 'Гость';
   let connected = false;
@@ -234,7 +231,7 @@
     if(senderRole && senderRole !== 'Пользователь' && senderRole !== 'Гость') {
       label = `[${senderRole}] `;
     }
-    div.textContent = label + sender + ': ' + text;
+    div.textContent = `${label}${sender}: ${text}`;
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
@@ -244,11 +241,10 @@
     ws.onopen = () => {
       connected = true;
       showStatus('✅ Подключено');
-      ws.send(JSON.stringify({ type: 'join', username, userId, password }));
+      ws.send(JSON.stringify({ type: 'join', username, userId, password: passwordInput.value }));
       chatHeader.textContent = `Чат (роль: ${role})`;
       inputArea.style.display = (role === 'Гость') ? 'none' : 'flex';
       callArea.style.display = (role === 'Гость') ? 'none' : 'flex';
-      roleLabel.textContent = `Роль: ${role}`;
     };
     ws.onclose = () => {
       connected = false;
@@ -256,7 +252,6 @@
       chatHeader.textContent = 'Не в чате';
       inputArea.style.display = 'none';
       callArea.style.display = 'none';
-      roleLabel.textContent = '';
     };
     ws.onerror = () => showStatus('Ошибка соединения');
     ws.onmessage = async (e) => {
@@ -268,19 +263,11 @@
         case 'notification':
           addMessage('Система', '', data.text, false);
           break;
+        case 'error':
+          alert('Ошибка: ' + data.text);
+          break;
         case 'signal':
           await handleSignal(data);
-          break;
-        case 'error':
-          alert(data.text);
-          ws.close();
-          break;
-        case 'role-assigned':
-          role = data.role;
-          chatHeader.textContent = `Чат (роль: ${role})`;
-          roleLabel.textContent = `Роль: ${role}`;
-          inputArea.style.display = (role === 'Гость') ? 'none' : 'flex';
-          callArea.style.display = (role === 'Гость') ? 'none' : 'flex';
           break;
       }
     };
@@ -288,15 +275,13 @@
 
   loginBtn.onclick = () => {
     userId = userIdInput.value.trim();
-    password = passwordInput.value;
     username = usernameInput.value.trim();
     serverUrl = serverInput.value.trim();
-    if(!userId || !password || !username || !serverUrl) {
-      alert('Заполните все поля');
+    if(!userId || !username || !serverUrl || !passwordInput.value.trim()) {
+      alert('Заполните все поля, включая пароль');
       return;
     }
     saveCookie('userId', userId);
-    saveCookie('password', password);
     saveCookie('username', username);
     saveCookie('serverUrl', serverUrl);
 
@@ -371,4 +356,20 @@
       localStream = null;
     }
     localAudio.srcObject = null;
-   
+    remoteAudio.srcObject = null;
+    hangupBtn.disabled = true;
+  }
+
+  callBtn.onclick = startCall;
+  hangupBtn.onclick = hangupCall;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    userIdInput.value = getCookie('userId') || '';
+    usernameInput.value = getCookie('username') || '';
+    serverInput.value = getCookie('serverUrl') || 'https://kotochat-e22r.onrender.com';
+    initTheme();
+  });
+})();
+</script>
+</body>
+</html>
