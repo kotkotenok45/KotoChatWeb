@@ -150,7 +150,6 @@
     <h2>KotoChat</h2>
     <button id="themeToggle">🌗 Тема</button>
     <input id="userIdInput" placeholder="Email или номер" />
-    <input id="passwordInput" type="password" placeholder="Пароль" />
     <input id="usernameInput" placeholder="Имя в чате" />
     <input id="serverInput" placeholder="WebSocket URL" />
     <button id="loginBtn">Войти</button>
@@ -174,7 +173,6 @@
 <script>
 (() => {
   const userIdInput = document.getElementById('userIdInput');
-  const passwordInput = document.getElementById('passwordInput');
   const usernameInput = document.getElementById('usernameInput');
   const serverInput = document.getElementById('serverInput');
   const loginBtn = document.getElementById('loginBtn');
@@ -202,7 +200,7 @@
   const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
   function saveCookie(key, value) {
-    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
+    document.cookie = ${key}=${encodeURIComponent(value)}; path=/; max-age=31536000;
   }
   function getCookie(key) {
     const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
@@ -229,9 +227,9 @@
 
     let label = '';
     if(senderRole && senderRole !== 'Пользователь' && senderRole !== 'Гость') {
-      label = `[${senderRole}] `;
+      label = [${senderRole}] ;
     }
-    div.textContent = `${label}${sender}: ${text}`;
+    div.textContent = ${label}${sender}: ${text};
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
@@ -241,8 +239,8 @@
     ws.onopen = () => {
       connected = true;
       showStatus('✅ Подключено');
-      ws.send(JSON.stringify({ type: 'join', username, userId, password: passwordInput.value }));
-      chatHeader.textContent = `Чат (роль: ${role})`;
+      ws.send(JSON.stringify({ type: 'join', username, userId }));
+      chatHeader.textContent = Чат (роль: ${role});
       inputArea.style.display = (role === 'Гость') ? 'none' : 'flex';
       callArea.style.display = (role === 'Гость') ? 'none' : 'flex';
     };
@@ -263,9 +261,6 @@
         case 'notification':
           addMessage('Система', '', data.text, false);
           break;
-        case 'error':
-          alert('Ошибка: ' + data.text);
-          break;
         case 'signal':
           await handleSignal(data);
           break;
@@ -277,13 +272,22 @@
     userId = userIdInput.value.trim();
     username = usernameInput.value.trim();
     serverUrl = serverInput.value.trim();
-    if(!userId || !username || !serverUrl || !passwordInput.value.trim()) {
-      alert('Заполните все поля, включая пароль');
+    if(!userId || !username || !serverUrl) {
+      alert('Заполните все поля');
       return;
     }
     saveCookie('userId', userId);
     saveCookie('username', username);
     saveCookie('serverUrl', serverUrl);
+
+    // Роли можно определять прямо здесь (клиентская проверка только для UI)
+    // Настоящая проверка будет на сервере
+    const rolesMap = {
+      'creator@example.com': 'Создатель',
+      'admin@example.com': 'Админ',
+      'guest@example.com': 'Гость',
+    };
+    role = rolesMap[userId.toLowerCase()] || 'Пользователь';
 
     connectWS();
   };
