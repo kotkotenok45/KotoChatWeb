@@ -1,91 +1,375 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>KotoChat</title>
-  <style>
-    body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #f0f0f0; }
-    #sidebar { width: 250px; padding: 10px; background: #ddd; display: flex; flex-direction: column; gap: 10px; }
-    #main { flex: 1; display: flex; flex-direction: column; }
-    #messages { flex: 1; padding: 10px; overflow-y: auto; background: #fff; }
-    input, button { padding: 5px; font-size: 16px; }
-    #chatInput { width: calc(100% - 110px); }
-    @media (max-width: 768px) {
-      body { flex-direction: column; }
-      #sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-between; gap: 5px; }
-      #sidebar input, #sidebar button { flex: 1 1 48%; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KotoChat с ролями</title>
+<style>
+  :root {
+    --bg: #fff;
+    --text: #222;
+    --accent: #2ed573;
+    --sidebar: #2f3542;
+    --header: #57606f;
+    --msg-you: #70a1ff;
+    --msg-other: #dfe4ea;
+    --border: #ccc;
+  }
+  [data-theme="dark"] {
+    --bg: #1e272e;
+    --text: #fff;
+    --accent: #1dd1a1;
+    --sidebar: #2f3542;
+    --header: #3742fa;
+    --msg-you: #2ed573;
+    --msg-other: #57606f;
+    --border: #444;
+  }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+  }
+  #sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #sidebar input, #sidebar button {
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+  }
+  #sidebar input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #sidebar button {
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+  }
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  #chatHeader {
+    background: var(--header);
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background: var(--bg);
+  }
+  .msg {
+    margin: 5px 0;
+    max-width: 70%;
+    padding: 8px 14px;
+    border-radius: 16px;
+    word-wrap: break-word;
+  }
+  .msg.you {
+    background: var(--msg-you);
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+  }
+  .msg.other {
+    background: var(--msg-other);
+    color: var(--text);
+    align-self: flex-start;
+    margin-right: auto;
+  }
+  #inputArea {
+    display: none;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  #inputArea input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+  }
+  #inputArea button {
+    margin-left: 10px;
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+  }
+  #callArea {
+    display: none;
+    gap: 10px;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  #themeToggle {
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: flex-start;
+  }
+  audio {
+    display: none;
+  }
+  .role-label {
+    font-weight: bold;
+    margin-right: 6px;
+    color: var(--accent);
+  }
+</style>
 </head>
-<body>
+<body data-theme="light">
   <div id="sidebar">
-    <input id="usernameInput" placeholder="Имя / Email" />
-    <input id="passwordInput" placeholder="Пароль" type="password" />
+    <h2>KotoChat</h2>
+    <button id="themeToggle">🌗 Тема</button>
+    <input id="userIdInput" placeholder="Email или номер" />
+    <input id="passwordInput" type="password" placeholder="Пароль" />
+    <input id="usernameInput" placeholder="Имя в чате" />
+    <input id="serverInput" placeholder="WebSocket URL" />
     <button id="loginBtn">Войти</button>
-    <button id="logoutBtn" style="display:none;">Выйти</button>
+    <div id="status"></div>
   </div>
   <div id="main">
+    <div id="chatHeader">Не в чате</div>
     <div id="messages"></div>
-    <form id="chatForm" style="display:none;">
-      <input id="chatInput" placeholder="Сообщение" autocomplete="off" />
-      <button>Отправить</button>
-    </form>
+    <div id="inputArea">
+      <input id="messageInput" type="text" placeholder="Введите сообщение..." />
+      <button id="sendBtn">Отправить</button>
+    </div>
+    <div id="callArea">
+      <button id="callBtn">📞 Позвонить</button>
+      <button id="hangupBtn" disabled>Завершить</button>
+      <audio id="localAudio" autoplay muted></audio>
+      <audio id="remoteAudio" autoplay></audio>
+    </div>
   </div>
 
-  <script>
-    const usernameInput = document.getElementById('usernameInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const chatForm = document.getElementById('chatForm');
-    const chatInput = document.getElementById('chatInput');
-    const messages = document.getElementById('messages');
+<script>
+(() => {
+  const userIdInput = document.getElementById('userIdInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const usernameInput = document.getElementById('usernameInput');
+  const serverInput = document.getElementById('serverInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const status = document.getElementById('status');
+  const messagesDiv = document.getElementById('messages');
+  const chatHeader = document.getElementById('chatHeader');
+  const inputArea = document.getElementById('inputArea');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const callArea = document.getElementById('callArea');
+  const callBtn = document.getElementById('callBtn');
+  const hangupBtn = document.getElementById('hangupBtn');
+  const localAudio = document.getElementById('localAudio');
+  const remoteAudio = document.getElementById('remoteAudio');
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
 
-    let ws;
+  let ws;
+  let username = '';
+  let userId = '';
+  let serverUrl = '';
+  let role = 'Гость';
+  let connected = false;
+  let localStream, peerConnection;
+  const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-    loginBtn.onclick = () => {
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value.trim();
-      if (!username) return alert("Введите имя!");
-      ws = new WebSocket("wss://kotochat-e22r.onrender.com"); // Авто вставка ws
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ type: 'join', username, userId: username, password }));
-        chatForm.style.display = "flex";
-        loginBtn.style.display = "none";
-        logoutBtn.style.display = "block";
-      };
-      ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        if (data.type === 'message') {
-          const div = document.createElement('div');
-          div.innerHTML = `<b>[${data.role}] ${data.username}:</b> ${data.text}`;
-          messages.appendChild(div);
-          messages.scrollTop = messages.scrollHeight;
-        } else if (data.type === 'notification') {
-          const div = document.createElement('div');
-          div.innerHTML = `<i>${data.text}</i>`;
-          messages.appendChild(div);
-        }
-      };
-      ws.onclose = () => {
-        chatForm.style.display = "none";
-        loginBtn.style.display = "block";
-        logoutBtn.style.display = "none";
-      };
+  function saveCookie(key, value) {
+    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
+  }
+  function getCookie(key) {
+    const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : '';
+  }
+
+  function initTheme() {
+    const saved = getCookie('theme') || 'light';
+    body.dataset.theme = saved;
+  }
+  themeToggle.onclick = () => {
+    const newTheme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+    body.dataset.theme = newTheme;
+    saveCookie('theme', newTheme);
+  };
+
+  function showStatus(text) {
+    status.textContent = text;
+  }
+
+  function addMessage(sender, senderRole, text, isYou) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (isYou ? 'you' : 'other');
+
+    let label = '';
+    if(senderRole && senderRole !== 'Пользователь' && senderRole !== 'Гость') {
+      label = `[${senderRole}] `;
+    }
+    div.textContent = `${label}${sender}: ${text}`;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function connectWS() {
+    ws = new WebSocket(serverUrl.replace(/^http/, 'ws'));
+    ws.onopen = () => {
+      connected = true;
+      showStatus('✅ Подключено');
+      ws.send(JSON.stringify({ type: 'join', username, userId, password: passwordInput.value }));
+      chatHeader.textContent = `Чат (роль: ${role})`;
+      inputArea.style.display = (role === 'Гость') ? 'none' : 'flex';
+      callArea.style.display = (role === 'Гость') ? 'none' : 'flex';
     };
-
-    logoutBtn.onclick = () => {
-      ws.close();
+    ws.onclose = () => {
+      connected = false;
+      showStatus('❌ Отключено');
+      chatHeader.textContent = 'Не в чате';
+      inputArea.style.display = 'none';
+      callArea.style.display = 'none';
     };
-
-    chatForm.onsubmit = (e) => {
-      e.preventDefault();
-      if (chatInput.value.trim()) {
-        ws.send(JSON.stringify({ type: 'message', text: chatInput.value }));
-        chatInput.value = '';
+    ws.onerror = () => showStatus('Ошибка соединения');
+    ws.onmessage = async (e) => {
+      const data = JSON.parse(e.data);
+      switch(data.type) {
+        case 'message':
+          addMessage(data.username, data.role, data.text, data.username === username);
+          break;
+        case 'notification':
+          addMessage('Система', '', data.text, false);
+          break;
+        case 'error':
+          alert('Ошибка: ' + data.text);
+          break;
+        case 'signal':
+          await handleSignal(data);
+          break;
       }
     };
-  </script>
+  }
+
+  loginBtn.onclick = () => {
+    userId = userIdInput.value.trim();
+    username = usernameInput.value.trim();
+    serverUrl = serverInput.value.trim();
+    if(!userId || !username || !serverUrl || !passwordInput.value.trim()) {
+      alert('Заполните все поля, включая пароль');
+      return;
+    }
+    saveCookie('userId', userId);
+    saveCookie('username', username);
+    saveCookie('serverUrl', serverUrl);
+
+    connectWS();
+  };
+
+  sendBtn.onclick = () => {
+    const text = messageInput.value.trim();
+    if(text && connected) {
+      ws.send(JSON.stringify({ type: 'message', text }));
+      addMessage(username, role, text, true);
+      messageInput.value = '';
+    }
+  };
+  messageInput.onkeyup = e => { if(e.key === 'Enter') sendBtn.click(); };
+
+  async function startCall() {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    localAudio.srcObject = localStream;
+    peerConnection = new RTCPeerConnection(config);
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.onicecandidate = e => {
+      if (e.candidate) {
+        ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
+      }
+    };
+    peerConnection.ontrack = e => {
+      remoteAudio.srcObject = e.streams[0];
+    };
+
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+
+    hangupBtn.disabled = false;
+  }
+
+  async function handleSignal(data) {
+    if (!peerConnection) {
+      peerConnection = new RTCPeerConnection(config);
+      peerConnection.onicecandidate = e => {
+        if (e.candidate) {
+          ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
+        }
+      };
+      peerConnection.ontrack = e => {
+        remoteAudio.srcObject = e.streams[0];
+      };
+    }
+    const s = data.signalData;
+    if (s.sdp) {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(s.sdp));
+      if (s.sdp.type === 'offer') {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localAudio.srcObject = localStream;
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+      }
+    } else if (s.candidate) {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(s.candidate));
+    }
+  }
+
+  function hangupCall() {
+    if (peerConnection) peerConnection.close();
+    peerConnection = null;
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+      localStream = null;
+    }
+    localAudio.srcObject = null;
+    remoteAudio.srcObject = null;
+    hangupBtn.disabled = true;
+  }
+
+  callBtn.onclick = startCall;
+  hangupBtn.onclick = hangupCall;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    userIdInput.value = getCookie('userId') || '';
+    usernameInput.value = getCookie('username') || '';
+    serverInput.value = getCookie('serverUrl') || 'https://kotochat-e22r.onrender.com';
+    initTheme();
+  });
+})();
+</script>
 </body>
 </html>
