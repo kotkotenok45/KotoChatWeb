@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>KotoChat с группами и управлением участников</title>
+<title>KotoChat с ролями</title>
 <style>
   :root {
     --bg: #fff;
@@ -34,22 +34,21 @@
     height: 100vh;
   }
   #sidebar {
-    width: 300px;
+    width: 280px;
     background: var(--sidebar);
     color: white;
     padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    box-sizing: border-box;
   }
-  #sidebar input, #sidebar button, #sidebar select {
+  #sidebar input, #sidebar button {
     padding: 10px;
     border-radius: 6px;
     border: none;
     font-size: 14px;
   }
-  #sidebar input, #sidebar select {
+  #sidebar input {
     width: 100%;
     box-sizing: border-box;
   }
@@ -102,10 +101,8 @@
     padding: 10px;
     border-top: 1px solid var(--border);
     background: var(--bg);
-    display: flex;
-    gap: 10px;
   }
-  #inputArea input[type="text"] {
+  #inputArea input[type="text"], #inputArea input[type="password"] {
     flex: 1;
     padding: 10px;
     border-radius: 20px;
@@ -113,6 +110,7 @@
     font-size: 14px;
   }
   #inputArea button {
+    margin-left: 10px;
     padding: 10px 20px;
     border-radius: 20px;
     border: none;
@@ -120,55 +118,257 @@
     color: white;
     cursor: pointer;
   }
-  #groupsArea {
+  #callArea {
+    display: none;
+    gap: 10px;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  #themeToggle {
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: flex-start;
+  }
+  audio {
     display: none;
   }
-  #membersList {
-    background: #444;
-    padding: 5px;
-    max-height: 150px;
-    overflow-y: auto;
-    border-radius: 6px;
-    font-size: 13px;
-  }
-  #membersList div {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 4px;
-    padding: 2px 5px;
-    border-radius: 4px;
-    background: #555;
-  }
-  #membersList button {
-    background: #ff6b6b;
-    border: none;
-    border-radius: 4px;
-    color: white;
-    cursor: pointer;
-    padding: 2px 6px;
-    font-size: 12px;
-  }
-  #addUserInput {
-    width: calc(100% - 90px);
-    margin-right: 5px;
+  .role-label {
+    font-weight: bold;
+    margin-left: 10px;
+    color: var(--accent);
   }
 </style>
 </head>
 <body data-theme="light">
   <div id="sidebar">
     <h2>KotoChat</h2>
-    <input id="emailInput" placeholder="Email" />
+    <button id="themeToggle">🌗 Тема</button>
+    <input id="userIdInput" placeholder="Email" />
     <input id="passwordInput" type="password" placeholder="Пароль" />
     <input id="usernameInput" placeholder="Имя в чате" />
-    <input id="serverInput" placeholder="WebSocket URL" value="ws://localhost:10000" />
+    <input id="serverInput" placeholder="WebSocket URL" />
     <button id="loginBtn">Войти</button>
     <div id="status"></div>
+  </div>
+  <div id="main">
+    <div id="chatHeader">Не в чате</div>
+    <div id="messages"></div>
+    <div id="inputArea">
+      <input id="messageInput" type="text" placeholder="Введите сообщение..." />
+      <button id="sendBtn">Отправить</button>
+      <span class="role-label" id="roleLabel"></span>
+    </div>
+    <div id="callArea">
+      <button id="callBtn">📞 Позвонить</button>
+      <button id="hangupBtn" disabled>Завершить</button>
+      <audio id="localAudio" autoplay muted></audio>
+      <audio id="remoteAudio" autoplay></audio>
+    </div>
+  </div>
 
-    <div id="groupsArea">
-      <label>Группы:</label>
-      <select id="groupsSelect"></select>
-      <button id="joinGroupBtn">Войти в группу</button>
-      <input id="newGroupInput" placeholder="Новая группа" />
-      <button id="createGroupBtn">Создать группу</button>
+<script>
+(() => {
+  const userIdInput = document.getElementById('userIdInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const usernameInput = document.getElementById('usernameInput');
+  const serverInput = document.getElementById('serverInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const status = document.getElementById('status');
+  const messagesDiv = document.getElementById('messages');
+  const chatHeader = document.getElementById('chatHeader');
+  const inputArea = document.getElementById('inputArea');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const callArea = document.getElementById('callArea');
+  const callBtn = document.getElementById('callBtn');
+  const hangupBtn = document.getElementById('hangupBtn');
+  const localAudio = document.getElementById('localAudio');
+  const remoteAudio = document.getElementById('remoteAudio');
+  const themeToggle = document.getElementById('themeToggle');
+  const roleLabel = document.getElementById('roleLabel');
+  const body = document.body;
 
-     
+  let ws;
+  let username = '';
+  let userId = '';
+  let password = '';
+  let serverUrl = '';
+  let role = 'Гость';
+  let connected = false;
+  let localStream, peerConnection;
+  const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+  function saveCookie(key, value) {
+    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
+  }
+  function getCookie(key) {
+    const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : '';
+  }
+
+  function initTheme() {
+    const saved = getCookie('theme') || 'light';
+    body.dataset.theme = saved;
+  }
+  themeToggle.onclick = () => {
+    const newTheme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+    body.dataset.theme = newTheme;
+    saveCookie('theme', newTheme);
+  };
+
+  function showStatus(text) {
+    status.textContent = text;
+  }
+
+  function addMessage(sender, senderRole, text, isYou) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (isYou ? 'you' : 'other');
+
+    let label = '';
+    if(senderRole && senderRole !== 'Пользователь' && senderRole !== 'Гость') {
+      label = `[${senderRole}] `;
+    }
+    div.textContent = label + sender + ': ' + text;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function connectWS() {
+    ws = new WebSocket(serverUrl.replace(/^http/, 'ws'));
+    ws.onopen = () => {
+      connected = true;
+      showStatus('✅ Подключено');
+      ws.send(JSON.stringify({ type: 'join', username, userId, password }));
+      chatHeader.textContent = `Чат (роль: ${role})`;
+      inputArea.style.display = (role === 'Гость') ? 'none' : 'flex';
+      callArea.style.display = (role === 'Гость') ? 'none' : 'flex';
+      roleLabel.textContent = `Роль: ${role}`;
+    };
+    ws.onclose = () => {
+      connected = false;
+      showStatus('❌ Отключено');
+      chatHeader.textContent = 'Не в чате';
+      inputArea.style.display = 'none';
+      callArea.style.display = 'none';
+      roleLabel.textContent = '';
+    };
+    ws.onerror = () => showStatus('Ошибка соединения');
+    ws.onmessage = async (e) => {
+      const data = JSON.parse(e.data);
+      switch(data.type) {
+        case 'message':
+          addMessage(data.username, data.role, data.text, data.username === username);
+          break;
+        case 'notification':
+          addMessage('Система', '', data.text, false);
+          break;
+        case 'signal':
+          await handleSignal(data);
+          break;
+        case 'error':
+          alert(data.text);
+          ws.close();
+          break;
+        case 'role-assigned':
+          role = data.role;
+          chatHeader.textContent = `Чат (роль: ${role})`;
+          roleLabel.textContent = `Роль: ${role}`;
+          inputArea.style.display = (role === 'Гость') ? 'none' : 'flex';
+          callArea.style.display = (role === 'Гость') ? 'none' : 'flex';
+          break;
+      }
+    };
+  }
+
+  loginBtn.onclick = () => {
+    userId = userIdInput.value.trim();
+    password = passwordInput.value;
+    username = usernameInput.value.trim();
+    serverUrl = serverInput.value.trim();
+    if(!userId || !password || !username || !serverUrl) {
+      alert('Заполните все поля');
+      return;
+    }
+    saveCookie('userId', userId);
+    saveCookie('password', password);
+    saveCookie('username', username);
+    saveCookie('serverUrl', serverUrl);
+
+    connectWS();
+  };
+
+  sendBtn.onclick = () => {
+    const text = messageInput.value.trim();
+    if(text && connected) {
+      ws.send(JSON.stringify({ type: 'message', text }));
+      addMessage(username, role, text, true);
+      messageInput.value = '';
+    }
+  };
+  messageInput.onkeyup = e => { if(e.key === 'Enter') sendBtn.click(); };
+
+  async function startCall() {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    localAudio.srcObject = localStream;
+    peerConnection = new RTCPeerConnection(config);
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.onicecandidate = e => {
+      if (e.candidate) {
+        ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
+      }
+    };
+    peerConnection.ontrack = e => {
+      remoteAudio.srcObject = e.streams[0];
+    };
+
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+
+    hangupBtn.disabled = false;
+  }
+
+  async function handleSignal(data) {
+    if (!peerConnection) {
+      peerConnection = new RTCPeerConnection(config);
+      peerConnection.onicecandidate = e => {
+        if (e.candidate) {
+          ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
+        }
+      };
+      peerConnection.ontrack = e => {
+        remoteAudio.srcObject = e.streams[0];
+      };
+    }
+    const s = data.signalData;
+    if (s.sdp) {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(s.sdp));
+      if (s.sdp.type === 'offer') {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localAudio.srcObject = localStream;
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+      }
+    } else if (s.candidate) {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(s.candidate));
+    }
+  }
+
+  function hangupCall() {
+    if (peerConnection) peerConnection.close();
+    peerConnection = null;
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+      localStream = null;
+    }
+    localAudio.srcObject = null;
+   
