@@ -3,168 +3,217 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>KotoChat с ролями</title>
+<title>KotoChat WhatsApp Style</title>
 <style>
+  /* ===== Стили в стиле WhatsApp Web ===== */
   :root {
-    --bg: #fff;
-    --text: #222;
-    --accent: #2ed573;
-    --sidebar: #2f3542;
-    --header: #57606f;
-    --msg-you: #70a1ff;
-    --msg-other: #dfe4ea;
-    --border: #ccc;
+    --bg: #f0f2f5;
+    --chat-bg: #ffffff;
+    --header-bg: #075e54;
+    --accent: #25d366;
+    --text-primary: #222;
+    --text-secondary: #777;
+    --msg-you-bg: #dcf8c6;
+    --msg-other-bg: #fff;
+    --border: #ddd;
   }
   [data-theme="dark"] {
-    --bg: #1e272e;
-    --text: #fff;
-    --accent: #1dd1a1;
-    --sidebar: #2f3542;
-    --header: #3742fa;
-    --msg-you: #2ed573;
-    --msg-other: #57606f;
-    --border: #444;
+    --bg: #121c21;
+    --chat-bg: #202c33;
+    --header-bg: #111b21;
+    --accent: #25d366;
+    --text-primary: #ddd;
+    --text-secondary: #bbb;
+    --msg-you-bg: #054640;
+    --msg-other-bg: #2a3942;
+    --border: #333;
   }
   body {
-    margin: 0;
-    font-family: Arial, sans-serif;
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: var(--bg);
-    color: var(--text);
-    display: flex;
+    color: var(--text-primary);
     height: 100vh;
+    display: flex;
+    overflow: hidden;
   }
   #sidebar {
-    width: 280px;
-    background: var(--sidebar);
+    width: 320px;
+    background: var(--header-bg);
     color: white;
-    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    padding: 20px;
+  }
+  #sidebar h2 {
+    margin: 0 0 15px 0;
+    font-weight: 700;
   }
   #sidebar input, #sidebar button {
-    padding: 10px;
-    border-radius: 6px;
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 20px;
     border: none;
-    font-size: 14px;
+    font-size: 15px;
+    box-sizing: border-box;
   }
   #sidebar input {
     width: 100%;
-    box-sizing: border-box;
   }
   #sidebar button {
     background: var(--accent);
-    color: white;
     cursor: pointer;
+    font-weight: 700;
+    transition: background 0.3s;
   }
-  #main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+  #sidebar button:hover {
+    background: #1ebe57;
   }
-  #chatHeader {
-    background: var(--header);
-    color: white;
-    padding: 10px;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-    background: var(--bg);
-  }
-  .msg {
-    margin: 5px 0;
-    max-width: 70%;
-    padding: 8px 14px;
-    border-radius: 16px;
-    word-wrap: break-word;
-  }
-  .msg.you {
-    background: var(--msg-you);
-    color: white;
-    align-self: flex-end;
-    margin-left: auto;
-  }
-  .msg.other {
-    background: var(--msg-other);
-    color: var(--text);
-    align-self: flex-start;
-    margin-right: auto;
-  }
-  #inputArea {
-    display: none;
-    padding: 10px;
-    border-top: 1px solid var(--border);
-    background: var(--bg);
-  }
-  #inputArea input[type="text"] {
-    flex: 1;
-    padding: 10px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
+  #status {
+    margin-top: auto;
     font-size: 14px;
-  }
-  #inputArea button {
-    margin-left: 10px;
-    padding: 10px 20px;
-    border-radius: 20px;
-    border: none;
-    background: var(--accent);
-    color: white;
-    cursor: pointer;
-  }
-  #callArea {
-    display: none;
-    gap: 10px;
-    padding: 10px;
-    border-top: 1px solid var(--border);
-    background: var(--bg);
+    min-height: 20px;
   }
   #themeToggle {
-    font-size: 13px;
     background: transparent;
     border: 1px solid white;
     color: white;
-    padding: 5px 10px;
-    border-radius: 8px;
+    border-radius: 20px;
+    padding: 8px 0;
     cursor: pointer;
+    font-weight: 600;
+  }
+  #chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--chat-bg);
+  }
+  #chatHeader {
+    background: var(--header-bg);
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  #messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    position: relative;
+    word-break: break-word;
+  }
+  .msg.you {
+    align-self: flex-end;
+    background: var(--msg-you-bg);
+  }
+  .msg.other {
     align-self: flex-start;
+    background: var(--msg-other-bg);
+  }
+  .msg .username {
+    font-weight: 700;
+    margin-bottom: 3px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  #inputArea {
+    display: flex;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--chat-bg);
+  }
+  #messageInput {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 25px;
+    border: 1px solid var(--border);
+    font-size: 15px;
+    outline: none;
+  }
+  #sendBtn {
+    margin-left: 10px;
+    padding: 0 18px;
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  #sendBtn:hover {
+    background: #1ebe57;
+  }
+  #callControls {
+    display: flex;
+    gap: 15px;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--chat-bg);
+  }
+  #callBtn, #hangupBtn {
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    font-size: 16px;
+    transition: background 0.3s;
+  }
+  #callBtn {
+    background: var(--accent);
+    color: white;
+  }
+  #callBtn:hover {
+    background: #1ebe57;
+  }
+  #hangupBtn {
+    background: #e74c3c;
+    color: white;
+  }
+  #hangupBtn:disabled {
+    background: #aaa;
+    cursor: default;
   }
   audio {
     display: none;
-  }
-  .role-label {
-    font-weight: bold;
-    margin-right: 6px;
-    color: var(--accent);
   }
 </style>
 </head>
 <body data-theme="light">
   <div id="sidebar">
     <h2>KotoChat</h2>
-    <button id="themeToggle">🌗 Тема</button>
-    <input id="userIdInput" placeholder="Email или номер" />
-    <input id="usernameInput" placeholder="Имя в чате" />
-    <input id="serverInput" placeholder="WebSocket URL" />
+    <input id="userIdInput" placeholder="Email или ID" autocomplete="off" />
+    <input id="usernameInput" placeholder="Имя в чате" autocomplete="off" />
+    <input id="serverInput" placeholder="WebSocket URL" autocomplete="off" value="ws://localhost:10000" />
     <button id="loginBtn">Войти</button>
     <div id="status"></div>
+    <button id="themeToggle">🌙 Тема</button>
   </div>
-  <div id="main">
+
+  <div id="chat">
     <div id="chatHeader">Не в чате</div>
     <div id="messages"></div>
-    <div id="inputArea">
-      <input id="messageInput" type="text" placeholder="Введите сообщение..." />
-      <button id="sendBtn">Отправить</button>
+    <div id="inputArea" style="display:none;">
+      <input id="messageInput" placeholder="Введите сообщение..." autocomplete="off" />
+      <button id="sendBtn">▶</button>
     </div>
-    <div id="callArea">
+    <div id="callControls" style="display:none;">
       <button id="callBtn">📞 Позвонить</button>
-      <button id="hangupBtn" disabled>Завершить</button>
+      <button id="hangupBtn" disabled>🔴 Завершить</button>
       <audio id="localAudio" autoplay muted></audio>
       <audio id="remoteAudio" autoplay></audio>
     </div>
@@ -182,7 +231,7 @@
   const inputArea = document.getElementById('inputArea');
   const messageInput = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
-  const callArea = document.getElementById('callArea');
+  const callControls = document.getElementById('callControls');
   const callBtn = document.getElementById('callBtn');
   const hangupBtn = document.getElementById('hangupBtn');
   const localAudio = document.getElementById('localAudio');
@@ -193,166 +242,165 @@
   let ws;
   let username = '';
   let userId = '';
-  let serverUrl = '';
-  let role = 'Гость';
   let connected = false;
-  let localStream, peerConnection;
+  let localStream = null;
+  let peerConnection = null;
   const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-  function saveCookie(key, value) {
-    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=31536000`;
-  }
-  function getCookie(key) {
-    const match = document.cookie.match(new RegExp('(^| )' + key + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : '';
-  }
-
-  function initTheme() {
-    const saved = getCookie('theme') || 'light';
-    body.dataset.theme = saved;
-  }
-  themeToggle.onclick = () => {
-    const newTheme = body.dataset.theme === 'dark' ? 'light' : 'dark';
-    body.dataset.theme = newTheme;
-    saveCookie('theme', newTheme);
-  };
-
-  function showStatus(text) {
-    status.textContent = text;
-  }
-
-  function addMessage(sender, senderRole, text, isYou) {
-    const div = document.createElement('div');
-    div.className = 'msg ' + (isYou ? 'you' : 'other');
-
-    let label = '';
-    if(senderRole && senderRole !== 'Пользователь' && senderRole !== 'Гость') {
-      label = `[${senderRole}] `;
+  function addMessage(usernameMsg, text, isYou) {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('msg', isYou ? 'you' : 'other');
+    if (!isYou) {
+      const userLabel = document.createElement('div');
+      userLabel.textContent = usernameMsg;
+      userLabel.classList.add('username');
+      msgDiv.appendChild(userLabel);
     }
-    div.textContent = `${label}${sender}: ${text}`;
-    messagesDiv.appendChild(div);
+    const textNode = document.createElement('div');
+    textNode.textContent = text;
+    msgDiv.appendChild(textNode);
+    messagesDiv.appendChild(msgDiv);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  function connectWS() {
-    ws = new WebSocket(serverUrl.replace(/^http/, 'ws'));
+  function setStatus(text) {
+    status.textContent = text;
+  }
+
+  function connect() {
+    ws = new WebSocket(serverInput.value.trim());
     ws.onopen = () => {
       connected = true;
-      showStatus('✅ Подключено');
+      setStatus('✅ Подключено');
       ws.send(JSON.stringify({ type: 'join', username, userId }));
-      chatHeader.textContent = `Чат (роль: ${role})`;
-      inputArea.style.display = (role === 'Гость') ? 'none' : 'flex';
-      callArea.style.display = (role === 'Гость') ? 'none' : 'flex';
+      chatHeader.textContent = `Чат — ${username}`;
+      inputArea.style.display = 'flex';
+      callControls.style.display = 'flex';
+      messageInput.focus();
+    };
+    ws.onmessage = async (event) => {
+      let data;
+      try { data = JSON.parse(event.data); } catch { return; }
+      if (data.type === 'message') {
+        addMessage(data.username, data.text, data.username === username);
+      } else if (data.type === 'notification') {
+        addMessage('Система', data.text, false);
+      } else if (data.type === 'signal') {
+        await handleSignal(data.signalData);
+      } else if (data.type === 'history' && Array.isArray(data.messages)) {
+        for (const msg of data.messages) {
+          addMessage(msg.username, msg.text, msg.username === username);
+        }
+      }
     };
     ws.onclose = () => {
       connected = false;
-      showStatus('❌ Отключено');
+      setStatus('❌ Отключено');
       chatHeader.textContent = 'Не в чате';
       inputArea.style.display = 'none';
-      callArea.style.display = 'none';
+      callControls.style.display = 'none';
     };
-    ws.onerror = () => showStatus('Ошибка соединения');
-    ws.onmessage = async (e) => {
-      const data = JSON.parse(e.data);
-      switch(data.type) {
-        case 'message':
-          addMessage(data.username, data.role, data.text, data.username === username);
-          break;
-        case 'notification':
-          addMessage('Система', '', data.text, false);
-          break;
-        case 'signal':
-          await handleSignal(data);
-          break;
-      }
+    ws.onerror = () => {
+      setStatus('Ошибка соединения');
     };
   }
 
   loginBtn.onclick = () => {
     userId = userIdInput.value.trim();
     username = usernameInput.value.trim();
-    serverUrl = serverInput.value.trim();
-    if(!userId || !username || !serverUrl) {
-      alert('Заполните все поля');
+    if (!userId || !username) {
+      alert('Пожалуйста, заполните все поля');
       return;
     }
-    saveCookie('userId', userId);
-    saveCookie('username', username);
-    saveCookie('serverUrl', serverUrl);
-
-    // Роли можно определять прямо здесь (клиентская проверка только для UI)
-    // Настоящая проверка будет на сервере
-    const rolesMap = {
-      'creator@example.com': 'Создатель',
-      'admin@example.com': 'Админ',
-      'guest@example.com': 'Гость',
-    };
-    role = rolesMap[userId.toLowerCase()] || 'Пользователь';
-
-    connectWS();
+    connect();
   };
 
   sendBtn.onclick = () => {
     const text = messageInput.value.trim();
-    if(text && connected) {
+    if (text && connected && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'message', text }));
-      addMessage(username, role, text, true);
+      addMessage(username, text, true);
       messageInput.value = '';
+      messageInput.focus();
     }
   };
-  messageInput.onkeyup = e => { if(e.key === 'Enter') sendBtn.click(); };
+
+  messageInput.onkeyup = e => {
+    if (e.key === 'Enter') sendBtn.click();
+  };
 
   async function startCall() {
-    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    localAudio.srcObject = localStream;
-    peerConnection = new RTCPeerConnection(config);
-    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localAudio.srcObject = localStream;
 
-    peerConnection.onicecandidate = e => {
-      if (e.candidate) {
-        ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
-      }
-    };
-    peerConnection.ontrack = e => {
-      remoteAudio.srcObject = e.streams[0];
-    };
-
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
-
-    hangupBtn.disabled = false;
-  }
-
-  async function handleSignal(data) {
-    if (!peerConnection) {
       peerConnection = new RTCPeerConnection(config);
-      peerConnection.onicecandidate = e => {
-        if (e.candidate) {
-          ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: e.candidate } }));
+
+      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+      peerConnection.onicecandidate = event => {
+        if (event.candidate && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: event.candidate } }));
         }
       };
-      peerConnection.ontrack = e => {
-        remoteAudio.srcObject = e.streams[0];
+
+      peerConnection.ontrack = event => {
+        remoteAudio.srcObject = event.streams[0];
       };
-    }
-    const s = data.signalData;
-    if (s.sdp) {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(s.sdp));
-      if (s.sdp.type === 'offer') {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        localAudio.srcObject = localStream;
-        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-        ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
-      }
-    } else if (s.candidate) {
-      await peerConnection.addIceCandidate(new RTCIceCandidate(s.candidate));
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+
+      hangupBtn.disabled = false;
+      callBtn.disabled = true;
+    } catch (err) {
+      alert('Ошибка при попытке начать звонок: ' + err.message);
     }
   }
 
-  function hangupCall() {
+  async function handleSignal(signalData) {
+    if (!peerConnection) {
+      peerConnection = new RTCPeerConnection(config);
+      peerConnection.onicecandidate = event => {
+        if (event.candidate && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: event.candidate } }));
+        }
+      };
+      peerConnection.ontrack = event => {
+        remoteAudio.srcObject = event.streams[0];
+      };
+    }
+
+    if (signalData.sdp) {
+      const remoteDesc = new RTCSessionDescription(signalData.sdp);
+      await peerConnection.setRemoteDescription(remoteDesc);
+
+      if (remoteDesc.type === 'offer') {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          localAudio.srcObject = localStream;
+          localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        } catch {
+          alert('Не удалось получить доступ к микрофону');
+          return;
+        }
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+      }
+    } else if (signalData.candidate) {
+      try {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(signalData.candidate));
+      } catch (err) {
+        console.warn('Ошибка при добавлении ICE-кандидата:', err);
+      }
+    }
+  }
+
+  hangupBtn.onclick = () => {
     if (peerConnection) peerConnection.close();
     peerConnection = null;
     if (localStream) {
@@ -362,18 +410,441 @@
     localAudio.srcObject = null;
     remoteAudio.srcObject = null;
     hangupBtn.disabled = true;
-  }
+    callBtn.disabled = false;
+  };
 
   callBtn.onclick = startCall;
-  hangupBtn.onclick = hangupCall;
 
-  window.addEventListener('DOMContentLoaded', () => {
-    userIdInput.value = getCookie('userId') || '';
-    usernameInput.value = getCookie('username') || '';
-    serverInput.value = getCookie('serverUrl') || 'https://kotochat-e22r.onrender.com';
-    initTheme();
-  });
+  themeToggle.onclick = () => {
+    body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+  };
 })();
 </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KotoChat WhatsApp Style</title>
+<style>
+  /* ===== Стили в стиле WhatsApp Web ===== */
+  :root {
+    --bg: #f0f2f5;
+    --chat-bg: #ffffff;
+    --header-bg: #075e54;
+    --accent: #25d366;
+    --text-primary: #222;
+    --text-secondary: #777;
+    --msg-you-bg: #dcf8c6;
+    --msg-other-bg: #fff;
+    --border: #ddd;
+  }
+  [data-theme="dark"] {
+    --bg: #121c21;
+    --chat-bg: #202c33;
+    --header-bg: #111b21;
+    --accent: #25d366;
+    --text-primary: #ddd;
+    --text-secondary: #bbb;
+    --msg-you-bg: #054640;
+    --msg-other-bg: #2a3942;
+    --border: #333;
+  }
+  body {
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+  #sidebar {
+    width: 320px;
+    background: var(--header-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  #sidebar h2 {
+    margin: 0 0 15px 0;
+    font-weight: 700;
+  }
+  #sidebar input, #sidebar button {
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 20px;
+    border: none;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  #sidebar input {
+    width: 100%;
+  }
+  #sidebar button {
+    background: var(--accent);
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.3s;
+  }
+  #sidebar button:hover {
+    background: #1ebe57;
+  }
+  #status {
+    margin-top: auto;
+    font-size: 14px;
+    min-height: 20px;
+  }
+  #themeToggle {
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    border-radius: 20px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  #chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--chat-bg);
+  }
+  #chatHeader {
+    background: var(--header-bg);
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  #messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    position: relative;
+    word-break: break-word;
+  }
+  .msg.you {
+    align-self: flex-end;
+    background: var(--msg-you-bg);
+  }
+  .msg.other {
+    align-self: flex-start;
+    background: var(--msg-other-bg);
+  }
+  .msg .username {
+    font-weight: 700;
+    margin-bottom: 3px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  #inputArea {
+    display: flex;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--chat-bg);
+  }
+  #messageInput {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 25px;
+    border: 1px solid var(--border);
+    font-size: 15px;
+    outline: none;
+  }
+  #sendBtn {
+    margin-left: 10px;
+    padding: 0 18px;
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  #sendBtn:hover {
+    background: #1ebe57;
+  }
+  #callControls {
+    display: flex;
+    gap: 15px;
+    padding: 10px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--chat-bg);
+  }
+  #callBtn, #hangupBtn {
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    font-size: 16px;
+    transition: background 0.3s;
+  }
+  #callBtn {
+    background: var(--accent);
+    color: white;
+  }
+  #callBtn:hover {
+    background: #1ebe57;
+  }
+  #hangupBtn {
+    background: #e74c3c;
+    color: white;
+  }
+  #hangupBtn:disabled {
+    background: #aaa;
+    cursor: default;
+  }
+  audio {
+    display: none;
+  }
+</style>
+</head>
+<body data-theme="light">
+  <div id="sidebar">
+    <h2>KotoChat</h2>
+    <input id="userIdInput" placeholder="Email или ID" autocomplete="off" />
+    <input id="usernameInput" placeholder="Имя в чате" autocomplete="off" />
+    <input id="serverInput" placeholder="WebSocket URL" autocomplete="off" value="ws://localhost:10000" />
+    <button id="loginBtn">Войти</button>
+    <div id="status"></div>
+    <button id="themeToggle">🌙 Тема</button>
+  </div>
+
+  <div id="chat">
+    <div id="chatHeader">Не в чате</div>
+    <div id="messages"></div>
+    <div id="inputArea" style="display:none;">
+      <input id="messageInput" placeholder="Введите сообщение..." autocomplete="off" />
+      <button id="sendBtn">▶</button>
+    </div>
+    <div id="callControls" style="display:none;">
+      <button id="callBtn">📞 Позвонить</button>
+      <button id="hangupBtn" disabled>🔴 Завершить</button>
+      <audio id="localAudio" autoplay muted></audio>
+      <audio id="remoteAudio" autoplay></audio>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const userIdInput = document.getElementById('userIdInput');
+  const usernameInput = document.getElementById('usernameInput');
+  const serverInput = document.getElementById('serverInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const status = document.getElementById('status');
+  const messagesDiv = document.getElementById('messages');
+  const chatHeader = document.getElementById('chatHeader');
+  const inputArea = document.getElementById('inputArea');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const callControls = document.getElementById('callControls');
+  const callBtn = document.getElementById('callBtn');
+  const hangupBtn = document.getElementById('hangupBtn');
+  const localAudio = document.getElementById('localAudio');
+  const remoteAudio = document.getElementById('remoteAudio');
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
+
+  let ws;
+  let username = '';
+  let userId = '';
+  let connected = false;
+  let localStream = null;
+  let peerConnection = null;
+  const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+  function addMessage(usernameMsg, text, isYou) {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('msg', isYou ? 'you' : 'other');
+    if (!isYou) {
+      const userLabel = document.createElement('div');
+      userLabel.textContent = usernameMsg;
+      userLabel.classList.add('username');
+      msgDiv.appendChild(userLabel);
+    }
+    const textNode = document.createElement('div');
+    textNode.textContent = text;
+    msgDiv.appendChild(textNode);
+    messagesDiv.appendChild(msgDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function setStatus(text) {
+    status.textContent = text;
+  }
+
+  function connect() {
+    ws = new WebSocket(serverInput.value.trim());
+    ws.onopen = () => {
+      connected = true;
+      setStatus('✅ Подключено');
+      ws.send(JSON.stringify({ type: 'join', username, userId }));
+      chatHeader.textContent = `Чат — ${username}`;
+      inputArea.style.display = 'flex';
+      callControls.style.display = 'flex';
+      messageInput.focus();
+    };
+    ws.onmessage = async (event) => {
+      let data;
+      try { data = JSON.parse(event.data); } catch { return; }
+      if (data.type === 'message') {
+        addMessage(data.username, data.text, data.username === username);
+      } else if (data.type === 'notification') {
+        addMessage('Система', data.text, false);
+      } else if (data.type === 'signal') {
+        await handleSignal(data.signalData);
+      } else if (data.type === 'history' && Array.isArray(data.messages)) {
+        for (const msg of data.messages) {
+          addMessage(msg.username, msg.text, msg.username === username);
+        }
+      }
+    };
+    ws.onclose = () => {
+      connected = false;
+      setStatus('❌ Отключено');
+      chatHeader.textContent = 'Не в чате';
+      inputArea.style.display = 'none';
+      callControls.style.display = 'none';
+    };
+    ws.onerror = () => {
+      setStatus('Ошибка соединения');
+    };
+  }
+
+  loginBtn.onclick = () => {
+    userId = userIdInput.value.trim();
+    username = usernameInput.value.trim();
+    if (!userId || !username) {
+      alert('Пожалуйста, заполните все поля');
+      return;
+    }
+    connect();
+  };
+
+  sendBtn.onclick = () => {
+    const text = messageInput.value.trim();
+    if (text && connected && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'message', text }));
+      addMessage(username, text, true);
+      messageInput.value = '';
+      messageInput.focus();
+    }
+  };
+
+  messageInput.onkeyup = e => {
+    if (e.key === 'Enter') sendBtn.click();
+  };
+
+  async function startCall() {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localAudio.srcObject = localStream;
+
+      peerConnection = new RTCPeerConnection(config);
+
+      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+      peerConnection.onicecandidate = event => {
+        if (event.candidate && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: event.candidate } }));
+        }
+      };
+
+      peerConnection.ontrack = event => {
+        remoteAudio.srcObject = event.streams[0];
+      };
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+
+      hangupBtn.disabled = false;
+      callBtn.disabled = true;
+    } catch (err) {
+      alert('Ошибка при попытке начать звонок: ' + err.message);
+    }
+  }
+
+  async function handleSignal(signalData) {
+    if (!peerConnection) {
+      peerConnection = new RTCPeerConnection(config);
+      peerConnection.onicecandidate = event => {
+        if (event.candidate && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'signal', signalData: { candidate: event.candidate } }));
+        }
+      };
+      peerConnection.ontrack = event => {
+        remoteAudio.srcObject = event.streams[0];
+      };
+    }
+
+    if (signalData.sdp) {
+      const remoteDesc = new RTCSessionDescription(signalData.sdp);
+      await peerConnection.setRemoteDescription(remoteDesc);
+
+      if (remoteDesc.type === 'offer') {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          localAudio.srcObject = localStream;
+          localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        } catch {
+          alert('Не удалось получить доступ к микрофону');
+          return;
+        }
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        ws.send(JSON.stringify({ type: 'signal', signalData: { sdp: peerConnection.localDescription } }));
+      }
+    } else if (signalData.candidate) {
+      try {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(signalData.candidate));
+      } catch (err) {
+        console.warn('Ошибка при добавлении ICE-кандидата:', err);
+      }
+    }
+  }
+
+  hangupBtn.onclick = () => {
+    if (peerConnection) peerConnection.close();
+    peerConnection = null;
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+      localStream = null;
+    }
+    localAudio.srcObject = null;
+    remoteAudio.srcObject = null;
+    hangupBtn.disabled = true;
+    callBtn.disabled = false;
+  };
+
+  callBtn.onclick = startCall;
+
+  themeToggle.onclick = () => {
+    body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+  };
+})();
+</script>
+
 </body>
 </html>
