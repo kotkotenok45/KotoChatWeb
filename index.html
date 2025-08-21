@@ -1,114 +1,128 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>KotoChat Web</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    :root { --bg:#0f1420; --card:#141b2d; --muted:#8aa0b8; --accent:#5b9cff; --me:#1f6feb; --you:#2d3a58; }
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:#fff;font:14px/1.4 system-ui,Segoe UI,Roboto}
-    .wrap{display:grid;grid-template-columns:280px 1fr;height:100vh}
-    .sidebar{background:#0c1220;border-right:1px solid #1b2440;padding:16px;display:flex;flex-direction:column;gap:12px}
-    .brand{font-weight:800;letter-spacing:.5px}
-    .card{background:var(--card);border:1px solid #1b2440;border-radius:16px;padding:14px}
-    .login input{width:100%;margin:6px 0;padding:10px;border-radius:10px;border:1px solid #26304e;background:#0f172a;color:#fff}
-    .login button{width:100%;padding:10px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
-    .main{display:flex;flex-direction:column}
-    .header{padding:12px 16px;border-bottom:1px solid #1b2440;display:flex;align-items:center;gap:10px}
-    .status{color:var(--muted);font-size:12px}
-    .chat{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
-    .msg{max-width:70%;padding:10px 12px;border-radius:14px}
-    .me{align-self:flex-end;background:var(--me)}
-    .you{align-self:flex-start;background:var(--you)}
-    .composer{display:flex;gap:8px;padding:12px;border-top:1px solid #1b2440}
-    .composer input{flex:1;padding:12px;border-radius:10px;border:1px solid #26304e;background:#0f172a;color:#fff}
-    .composer button{padding:12px 16px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
-    @media(max-width:900px){.wrap{grid-template-columns:1fr}.sidebar{display:none}}
-  </style>
+<meta charset="UTF-8">
+<title>KotoChat Web</title>
+<style>
+body{font-family:sans-serif;margin:0;padding:0;background:#f5f5f5}
+.container{width:800px;margin:20px auto}
+h2{text-align:center}
+#login,#chat{background:#fff;padding:20px;border-radius:10px;box-shadow:0 0 5px #ccc}
+#chat{display:none}
+#messages{border:1px solid #ccc;height:400px;overflow-y:auto;padding:10px;margin-bottom:10px;display:flex;flex-direction:column}
+.msg{margin:5px 0;padding:6px;border-radius:6px;max-width:70%}
+.me{background:#cce5ff;align-self:flex-end}
+.other{background:#d4edda;align-self:flex-start}
+.row{display:flex;gap:5px;margin-top:5px}
+input{flex:1;padding:6px;border:1px solid #ccc;border-radius:6px}
+button{padding:6px 12px;border:none;border-radius:6px;background:#007bff;color:white;cursor:pointer}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <aside class="sidebar">
-      <div class="brand">🐱 KotoChat Web</div>
-      <div class="card login">
-        <input id="u" placeholder="Username" />
-        <input id="p" type="password" placeholder="Password" />
-        <button id="loginBtn">Войти</button>
-        <div id="hint" style="color:#9fb3c8;font-size:12px;margin-top:6px;">Есть учётка: <b>creator/creator</b></div>
-      </div>
-      <div class="card">
-        <div style="color:#9fb3c8;font-size:12px">Отправить кому</div>
-        <input id="to" placeholder="username получателя" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #26304e;background:#0f172a;color:#fff" />
-      </div>
-    </aside>
+<div class="container">
+<h2>KotoChat Web</h2>
 
-    <main class="main">
-      <div class="header">
-        <div style="font-weight:700">Чат</div>
-        <div class="status" id="status">offline</div>
-        <div style="margin-left:auto" id="me"></div>
-      </div>
+<div id="login">
+<input id="username" placeholder="Логин"><br><br>
+<input id="password" type="password" placeholder="Пароль"><br><br>
+<button onclick="login()">Войти / Создать аккаунт</button>
+</div>
 
-      <div id="chat" class="chat"></div>
+<div id="chat">
+<div id="messages"></div>
 
-      <div class="composer">
-        <input id="text" placeholder="Сообщение..." />
-        <button id="sendBtn">➤</button>
-      </div>
-    </main>
-  </div>
+<div class="row">
+<input id="to" placeholder="Кому">
+<input id="text" placeholder="Сообщение">
+<button onclick="sendMsg()">Отправить</button>
+</div>
 
-  <script>
-    const API = "https://kotochat-e22r.onrender.com";
-    let token=null, username=null, ws=null;
+<div class="row">
+<input id="groupName" placeholder="Новая группа">
+<button onclick="createGroup()">Создать группу</button>
+</div>
 
-    const el = (id)=>document.getElementById(id);
-    const chat = el("chat"), statusEl = el("status"), meEl = el("me");
+<div class="row">
+<input id="addUser" placeholder="Добавить в группу">
+<input id="groupTarget" placeholder="Группа">
+<button onclick="addUserToGroup()">Добавить</button>
+</div>
 
-    function addMsg(m, self=false){
-      const d = document.createElement("div");
-      d.className = "msg " + (self ? "me":"you");
-      d.textContent = (self? "Вы: " : (m.from + ": ")) + m.text;
-      chat.appendChild(d);
-      chat.scrollTop = chat.scrollHeight;
-    }
+<div class="row">
+<input id="roleUser" placeholder="Пользователь">
+<input id="roleGroup" placeholder="Группа">
+<select id="roleSelect">
+<option>Участник</option>
+<option>Модератор</option>
+<option>Создатель</option>
+</select>
+<button onclick="changeRole()">Изменить роль</button>
+</div>
+</div>
+</div>
 
-    async function login(){
-      username = el("u").value.trim();
-      const password = el("p").value;
-      const r = await fetch(API + "/api/login", { method:"POST", headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ username, password }) });
-      const data = await r.json();
-      if (!data.token) { alert("Ошибка входа"); return; }
-      token = data.token; meEl.textContent = username;
-      connectWS();
-    }
+<script>
+const API="https://kotochat-e22r.onrender.com/api";
+let username;
 
-    function connectWS(){
-      statusEl.textContent = "connecting…";
-      ws = new WebSocket(`wss://kotochat-e22r.onrender.com?token=${encodeURIComponent(token)}`);
-      ws.onopen = ()=> statusEl.textContent = "online";
-      ws.onclose = ()=> statusEl.textContent = "offline";
-      ws.onmessage = (e)=>{
-        const msg = JSON.parse(e.data);
-        if (msg.type === "message") addMsg(msg.payload);
-        if (msg.type === "presence") statusEl.textContent = "online";
-      };
-    }
+async function login(){
+ username=document.getElementById("username").value;
+ const password=document.getElementById("password").value;
+ let res=await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
+ if(res.ok){document.getElementById("login").style.display="none";document.getElementById("chat").style.display="block";loadData();setInterval(loadData,2000)}
+ else{
+   res=await fetch(API+"/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
+   if(res.ok){document.getElementById("login").style.display="none";document.getElementById("chat").style.display="block";loadData();setInterval(loadData,2000)}
+   else alert("Ошибка");
+ }
+}
 
-    function sendNow(){
-      const to = el("to").value.trim();
-      const text = el("text").value;
-      if (!ws || ws.readyState !== 1) return alert("Нет соединения");
-      if (!to || !text) return;
-      ws.send(JSON.stringify({ type: "send", to, text }));
-      addMsg({ from: username, to, text }, true);
-      el("text").value = "";
-    }
+async function loadData(){
+ const msgs=await fetch(`${API}/messages/${username}`);
+ const data=await msgs.json();
+ const box=document.getElementById("messages");
+ box.innerHTML="";
+ for(const m of data){
+   const div=document.createElement("div");
+   div.className="msg "+(m.from===username?"me":"other");
+   div.innerText=`${m.from}: ${m.text}`;
+   box.appendChild(div);
+   box.scrollTop=box.scrollHeight;
+ }
+}
 
-    el("loginBtn").onclick = login;
-    el("sendBtn").onclick = sendNow;
-    el("text").addEventListener("keydown", e=>{ if(e.key==="Enter") sendNow(); });
-  </script>
+async function sendMsg(){
+ const to=document.getElementById("to").value;
+ const text=document.getElementById("text").value;
+ if(!to||!text)return;
+ await fetch(API+"/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({from:username,to,text})});
+ document.getElementById("text").value="";
+ loadData();
+}
+
+async function createGroup(){
+ const g=document.getElementById("groupName").value;
+ if(!g)return;
+ await fetch(API+"/creategroup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({creator:username,name:g})});
+ document.getElementById("groupName").value="";
+}
+
+async function addUserToGroup(){
+ const u=document.getElementById("addUser").value;
+ const g=document.getElementById("groupTarget").value;
+ if(!u||!g)return;
+ await fetch(API+"/addtogroup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({group:g,user:u,by:username})});
+ document.getElementById("addUser").value="";document.getElementById("groupTarget").value="";
+}
+
+async function changeRole(){
+ const u=document.getElementById("roleUser").value;
+ const g=document.getElementById("roleGroup").value;
+ const r=document.getElementById("roleSelect").value;
+ if(!u||!g||!r)return;
+ await fetch(API+"/changerole",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({group:g,user:u,role:r,by:username})});
+ document.getElementById("roleUser").value="";document.getElementById("roleGroup").value="";
+}
+</script>
 </body>
 </html>
