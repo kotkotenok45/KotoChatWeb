@@ -1,66 +1,114 @@
-import React, { useState } from "react";
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>KotoChat Web</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root { --bg:#0f1420; --card:#141b2d; --muted:#8aa0b8; --accent:#5b9cff; --me:#1f6feb; --you:#2d3a58; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:#fff;font:14px/1.4 system-ui,Segoe UI,Roboto}
+    .wrap{display:grid;grid-template-columns:280px 1fr;height:100vh}
+    .sidebar{background:#0c1220;border-right:1px solid #1b2440;padding:16px;display:flex;flex-direction:column;gap:12px}
+    .brand{font-weight:800;letter-spacing:.5px}
+    .card{background:var(--card);border:1px solid #1b2440;border-radius:16px;padding:14px}
+    .login input{width:100%;margin:6px 0;padding:10px;border-radius:10px;border:1px solid #26304e;background:#0f172a;color:#fff}
+    .login button{width:100%;padding:10px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+    .main{display:flex;flex-direction:column}
+    .header{padding:12px 16px;border-bottom:1px solid #1b2440;display:flex;align-items:center;gap:10px}
+    .status{color:var(--muted);font-size:12px}
+    .chat{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+    .msg{max-width:70%;padding:10px 12px;border-radius:14px}
+    .me{align-self:flex-end;background:var(--me)}
+    .you{align-self:flex-start;background:var(--you)}
+    .composer{display:flex;gap:8px;padding:12px;border-top:1px solid #1b2440}
+    .composer input{flex:1;padding:12px;border-radius:10px;border:1px solid #26304e;background:#0f172a;color:#fff}
+    .composer button{padding:12px 16px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+    @media(max-width:900px){.wrap{grid-template-columns:1fr}.sidebar{display:none}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="sidebar">
+      <div class="brand">🐱 KotoChat Web</div>
+      <div class="card login">
+        <input id="u" placeholder="Username" />
+        <input id="p" type="password" placeholder="Password" />
+        <button id="loginBtn">Войти</button>
+        <div id="hint" style="color:#9fb3c8;font-size:12px;margin-top:6px;">Есть учётка: <b>creator/creator</b></div>
+      </div>
+      <div class="card">
+        <div style="color:#9fb3c8;font-size:12px">Отправить кому</div>
+        <input id="to" placeholder="username получателя" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #26304e;background:#0f172a;color:#fff" />
+      </div>
+    </aside>
 
-export default function App() {
-  const [screen, setScreen] = useState("login");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [text, setText] = useState("");
-  const [to, setTo] = useState("");
-  const [ws, setWs] = useState(null);
+    <main class="main">
+      <div class="header">
+        <div style="font-weight:700">Чат</div>
+        <div class="status" id="status">offline</div>
+        <div style="margin-left:auto" id="me"></div>
+      </div>
 
-  async function login() {
-    const res = await fetch("https://kotochat-e22r.onrender.com/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await res.json();
-    if (data.token) {
-      const sock = new WebSocket(
-        `wss://kotochat-e22r.onrender.com?token=${encodeURIComponent(data.token)}`
-      );
-      sock.onmessage = (e) => {
+      <div id="chat" class="chat"></div>
+
+      <div class="composer">
+        <input id="text" placeholder="Сообщение..." />
+        <button id="sendBtn">➤</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API = "https://kotochat-e22r.onrender.com";
+    let token=null, username=null, ws=null;
+
+    const el = (id)=>document.getElementById(id);
+    const chat = el("chat"), statusEl = el("status"), meEl = el("me");
+
+    function addMsg(m, self=false){
+      const d = document.createElement("div");
+      d.className = "msg " + (self ? "me":"you");
+      d.textContent = (self? "Вы: " : (m.from + ": ")) + m.text;
+      chat.appendChild(d);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function login(){
+      username = el("u").value.trim();
+      const password = el("p").value;
+      const r = await fetch(API + "/api/login", { method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ username, password }) });
+      const data = await r.json();
+      if (!data.token) { alert("Ошибка входа"); return; }
+      token = data.token; meEl.textContent = username;
+      connectWS();
+    }
+
+    function connectWS(){
+      statusEl.textContent = "connecting…";
+      ws = new WebSocket(`wss://kotochat-e22r.onrender.com?token=${encodeURIComponent(token)}`);
+      ws.onopen = ()=> statusEl.textContent = "online";
+      ws.onclose = ()=> statusEl.textContent = "offline";
+      ws.onmessage = (e)=>{
         const msg = JSON.parse(e.data);
-        if (msg.type === "message") setMessages((m) => [...m, msg.payload]);
+        if (msg.type === "message") addMsg(msg.payload);
+        if (msg.type === "presence") statusEl.textContent = "online";
       };
-      setWs(sock);
-      setScreen("chat");
     }
-  }
 
-  function sendMsg() {
-    if (ws && text && to) {
+    function sendNow(){
+      const to = el("to").value.trim();
+      const text = el("text").value;
+      if (!ws || ws.readyState !== 1) return alert("Нет соединения");
+      if (!to || !text) return;
       ws.send(JSON.stringify({ type: "send", to, text }));
-      setMessages((m) => [...m, { from: username, to, text }]);
-      setText("");
+      addMsg({ from: username, to, text }, true);
+      el("text").value = "";
     }
-  }
 
-  if (screen === "login") {
-    return (
-      <div className="login">
-        <h2>KotoChat Web</h2>
-        <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button onClick={login}>Login</button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="chat">
-      <h3>Chat as {username}</h3>
-      <div className="messages">
-        {messages.map((m, i) => (
-          <div key={i} className={m.from === username ? "msg self" : "msg"}>
-            <b>{m.from}:</b> {m.text}
-          </div>
-        ))}
-      </div>
-      <input placeholder="To" value={to} onChange={(e) => setTo(e.target.value)} />
-      <input placeholder="Message" value={text} onChange={(e) => setText(e.target.value)} />
-      <button onClick={sendMsg}>Send</button>
-    </div>
-  );
-}
+    el("loginBtn").onclick = login;
+    el("sendBtn").onclick = sendNow;
+    el("text").addEventListener("keydown", e=>{ if(e.key==="Enter") sendNow(); });
+  </script>
+</body>
+</html>
