@@ -1,66 +1,66 @@
-<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <title>KotoChat Web</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        max-width: 600px;
-        margin: auto;
-        padding: 20px;
-      }
-      #chat {
-        border: 1px solid #ccc;
-        height: 300px;
-        overflow-y: auto;
-        padding: 10px;
-        margin-bottom: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>KotoChat Web</h1>
-    <input id="username" placeholder="username" />
-    <input id="password" type="password" placeholder="password" />
-    <button id="login">Login</button>
-    <div id="chat"></div>
-    <input id="to" placeholder="send to" />
-    <input id="text" placeholder="message" />
-    <button id="send">Send</button>
+import React, { useState } from "react";
 
-    <script>
-      let token, ws;
+export default function App() {
+  const [screen, setScreen] = useState("login");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState("");
+  const [to, setTo] = useState("");
+  const [ws, setWs] = useState(null);
 
-      document.getElementById("login").onclick = async () => {
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
-        const res = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-        });
-        const data = await res.json();
-        if (data.token) {
-          token = data.token;
-          ws = new WebSocket(
-            `wss://kotochat-e22r.onrender.com?token=${encodeURIComponent(
-              token
-            )}`
-          );
-          ws.onmessage = (e) => {
-            const msg = JSON.parse(e.data);
-            const chat = document.getElementById("chat");
-            chat.innerHTML += `<div>${JSON.stringify(msg)}</div>`;
-          };
-        }
+  async function login() {
+    const res = await fetch("https://kotochat-e22r.onrender.com/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (data.token) {
+      const sock = new WebSocket(
+        `wss://kotochat-e22r.onrender.com?token=${encodeURIComponent(data.token)}`
+      );
+      sock.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === "message") setMessages((m) => [...m, msg.payload]);
       };
+      setWs(sock);
+      setScreen("chat");
+    }
+  }
 
-      document.getElementById("send").onclick = () => {
-        const to = document.getElementById("to").value;
-        const text = document.getElementById("text").value;
-        ws.send(JSON.stringify({ type: "send", to, text }));
-      };
-    </script>
-  </body>
-</html>
+  function sendMsg() {
+    if (ws && text && to) {
+      ws.send(JSON.stringify({ type: "send", to, text }));
+      setMessages((m) => [...m, { from: username, to, text }]);
+      setText("");
+    }
+  }
+
+  if (screen === "login") {
+    return (
+      <div className="login">
+        <h2>KotoChat Web</h2>
+        <input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <button onClick={login}>Login</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="chat">
+      <h3>Chat as {username}</h3>
+      <div className="messages">
+        {messages.map((m, i) => (
+          <div key={i} className={m.from === username ? "msg self" : "msg"}>
+            <b>{m.from}:</b> {m.text}
+          </div>
+        ))}
+      </div>
+      <input placeholder="To" value={to} onChange={(e) => setTo(e.target.value)} />
+      <input placeholder="Message" value={text} onChange={(e) => setText(e.target.value)} />
+      <button onClick={sendMsg}>Send</button>
+    </div>
+  );
+}
