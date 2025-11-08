@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Кроссплатформенный Мессенджер</title>
+<title>Коточат — Мессенджер с аккаунтами</title>
 <style>
   :root {
     --sidebar-bg: #2f3542;
@@ -21,16 +21,69 @@
     --shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     display: flex;
     height: 100vh;
     overflow: hidden;
+    background: #ecf0f1;
+  }
+
+  #loginScreen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+
+  #loginScreen h1 {
+    font-size: 2.4rem;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  #loginScreen p {
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+    max-width: 500px;
+  }
+
+  #usernameInput {
+    padding: 14px 20px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 30px;
+    width: 300px;
+    max-width: 90%;
+    outline: none;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  #connectBtn {
+    background: white;
+    color: #2575fc;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 40px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  #connectBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
   }
 
   #sidebar {
@@ -45,143 +98,38 @@
   }
 
   #sidebar h3 {
-    margin-top: 0;
-    margin-bottom: 16px;
+    margin: 0 0 16px;
     font-size: 1.3rem;
     text-align: center;
   }
 
-  #sidebar input, #sidebar button {
-    margin-top: 8px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: none;
-    font-size: 14px;
-  }
-
-  #sidebar input {
-    width: 100%;
+  #accountInfo {
     background: rgba(255,255,255,0.1);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.2);
-  }
-
-  #sidebar input::placeholder {
-    color: rgba(255,255,255,0.6);
-  }
-
-  #sidebar input:focus {
-    outline: 1px solid rgba(255,255,255,0.4);
-  }
-
-  #sidebar button {
-    background: var(--btn-primary);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  #sidebar button:hover:not(:disabled) {
-    background: #2c39da;
-  }
-
-  #main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: var(--main-bg);
-  }
-
-  #chatHeader {
-    background: var(--header-bg);
-    color: var(--text-light);
-    padding: 12px 16px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    box-shadow: var(--shadow);
-  }
-
-  #messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .msg {
-    max-width: 70%;
-    padding: 10px 14px;
-    border-radius: var(--border-radius);
-    margin: 6px 0;
-    word-wrap: break-word;
-    line-height: 1.4;
-    position: relative;
-    animation: fadeIn 0.2s ease-in;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .msg.you {
-    background: var(--you-msg-bg);
-    color: var(--text-light);
-    align-self: flex-end;
-    margin-left: auto;
-  }
-
-  .msg.other {
-    background: var(--other-msg-bg);
-    color: var(--text-dark);
-    align-self: flex-start;
-    margin-right: auto;
-  }
-
-  .msg.system {
-    background: #f8c291;
-    color: #e58e26;
-    align-self: center;
-    font-style: italic;
-    max-width: 90%;
-  }
-
-  #inputArea {
-    display: flex;
     padding: 12px;
-    background: var(--input-bg);
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    text-align: center;
   }
 
-  #inputArea input[type="text"] {
-    flex: 1;
-    padding: 12px 16px;
-    border-radius: 24px;
-    border: 1px solid rgba(0,0,0,0.1);
-    font-size: 14px;
-    outline: none;
+  #accountName {
+    font-weight: bold;
+    font-size: 1.1rem;
   }
 
-  #inputArea input[type="text"]:focus {
-    border-color: #a4b0be;
+  #accountStatus {
+    font-size: 0.85rem;
+    opacity: 0.8;
   }
 
-  #inputArea button {
-    margin-left: 12px;
-    padding: 12px 24px;
-    border-radius: 24px;
-    border: none;
-    background: var(--btn-success);
+  #logoutBtn {
+    background: #ff6b6b;
     color: white;
-    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    margin-top: 8px;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  #inputArea button:hover:not(:disabled) {
-    background: #28c76f;
   }
 
   #groups {
@@ -199,155 +147,170 @@
     border-radius: 20px;
     cursor: pointer;
     font-size: 13px;
-    transition: all 0.2s;
     flex: 1 1 45%;
     min-width: 100px;
     text-align: center;
   }
 
-  .group-btn:hover {
-    background: #2c39da;
-    transform: translateY(-1px);
+  .group-btn:hover { background: #2c39da; }
+  .group-btn.active { background: #ff9f43; }
+
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--main-bg);
   }
 
-  .group-btn.active {
-    background: #ff6347;
-    box-shadow: 0 0 0 2px white, 0 0 0 4px #ff6347;
+  #chatHeader {
+    background: var(--header-bg);
+    color: var(--text-light);
+    padding: 12px 16px;
+    font-weight: 600;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
   }
 
-  #callArea {
+  #onlineCount {
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .msg {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: var(--border-radius);
+    margin: 6px 0;
+    word-wrap: break-word;
+    line-height: 1.4;
+    animation: fadeIn 0.2s;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  .msg.you { background: var(--you-msg-bg); color: white; align-self: flex-end; margin-left: auto; }
+  .msg.other { background: var(--other-msg-bg); color: var(--text-dark); align-self: flex-start; margin-right: auto; }
+  .msg.system { background: #f8c291; color: #e58e26; align-self: center; font-style: italic; max-width: 90%; }
+
+  #inputArea, #callArea {
+    display: none;
     padding: 12px;
     background: var(--input-bg);
-    display: flex;
     gap: 12px;
     align-items: center;
     border-top: 1px solid rgba(0,0,0,0.05);
   }
 
-  #callBtn {
-    background: var(--btn-success);
-    color: white;
+  #inputArea input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 24px;
+    border: 1px solid rgba(0,0,0,0.1);
+    outline: none;
+  }
+
+  #inputArea button, #callArea button {
     padding: 10px 18px;
     border: none;
     border-radius: 20px;
-    cursor: pointer;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  #callBtn:hover:not(:disabled) {
-    background: #28c76f;
-  }
-
-  #hangupBtn {
-    background: var(--btn-danger);
     color: white;
-    padding: 10px 18px;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    cursor: pointer;
   }
 
-  #hangupBtn:hover:not(:disabled) {
-    background: #ff5252;
-  }
+  #inputArea button { background: var(--btn-success); }
+  #callBtn { background: var(--btn-success); }
+  #hangupBtn { background: var(--btn-danger); }
 
-  #localAudio, #remoteAudio {
-    display: none;
-  }
+  .hidden { display: none !important; }
 
-  #status {
-    margin-top: 12px;
-    font-size: 12px;
-    color: #a4b0be;
-    min-height: 18px;
-  }
-
-  .hidden {
-    display: none !important;
-  }
-
-  /* Мобильная адаптация */
   @media (max-width: 768px) {
-    #sidebar {
-      width: 220px;
-      font-size: 14px;
-    }
+    #sidebar { width: 220px; }
+    #accountInfo { font-size: 0.9rem; }
   }
 
   @media (max-width: 480px) {
-    body {
-      flex-direction: column;
-    }
-    #sidebar {
-      width: 100%;
-      height: auto;
-      max-height: 40vh;
-    }
-    #groups {
-      justify-content: space-between;
-    }
-    .msg {
-      max-width: 85%;
-    }
+    body { flex-direction: column; }
+    #sidebar { width: 100%; max-height: 40vh; }
   }
 </style>
 </head>
 <body>
 
-<div id="sidebar">
-  <h3>Кроссплатформенный<br>Мессенджер</h3>
-  <input id="usernameInput" placeholder="Ваше имя" autocomplete="off" />
-  <div id="groups"></div>
-  <button id="connectBtn">Подключиться</button>
-  <div id="status"></div>
+<!-- Экран входа -->
+<div id="loginScreen">
+  <h1>🐈 Коточат</h1>
+  <p>Зайдите под своим именем — оно будет вашим аккаунтом</p>
+  <input id="usernameInput" type="text" placeholder="Введите имя (латиница или кириллица)" maxlength="20" autocomplete="off" />
+  <button id="connectBtn">Войти в чат</button>
 </div>
 
-<div id="main">
-  <div id="chatHeader">Выберите группу</div>
-  <div id="messages"></div>
-  <div id="inputArea" class="hidden">
-    <input id="messageInput" type="text" placeholder="Введите сообщение..." maxlength="500" />
-    <button id="sendBtn">Отправить</button>
+<!-- Основной интерфейс (скрыт до входа) -->
+<div id="app" class="hidden">
+  <div id="sidebar">
+    <h3>Коточат</h3>
+    <div id="accountInfo">
+      <div id="accountName">—</div>
+      <div id="accountStatus">оффлайн</div>
+      <button id="logoutBtn">Выйти</button>
+    </div>
+    <div id="groups"></div>
   </div>
-  <div id="callArea" class="hidden">
-    <button id="callBtn">📞 Позвонить</button>
-    <button id="hangupBtn" disabled>❌ Завершить</button>
-    <audio id="localAudio" autoplay muted></audio>
-    <audio id="remoteAudio" autoplay></audio>
+
+  <div id="main">
+    <div id="chatHeader">
+      <span id="groupName">Выберите группу</span>
+      <span id="onlineCount">—</span>
+    </div>
+    <div id="messages"></div>
+    <div id="inputArea">
+      <input id="messageInput" type="text" placeholder="Введите сообщение..." maxlength="500" />
+      <button id="sendBtn">Отправить</button>
+    </div>
+    <div id="callArea">
+      <button id="callBtn">📞 Позвонить</button>
+      <button id="hangupBtn" disabled>❌ Завершить</button>
+      <audio id="localAudio" autoplay muted></audio>
+      <audio id="remoteAudio" autoplay></audio>
+    </div>
   </div>
 </div>
 
 <script>
 (() => {
-  // === Настройки ===
-  const DEFAULT_WS_URL = 'wss://kotochat-e22r.onrender.com';
+  // === Конфигурация ===
+  const WS_URL = 'wss://kotochat-e22r.onrender.com';
   const GROUPS = ['Общий', 'Работа', 'Друзья'];
-  const STUN_SERVERS = [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
-  ];
-
+  
   // === Состояние ===
   let ws = null;
+  let accountId = null;
   let username = '';
   let currentGroup = '';
   let connected = false;
   let localStream = null;
   let peerConnection = null;
 
-  // === DOM элементы ===
+  // === DOM ===
+  const loginScreen = document.getElementById('loginScreen');
+  const app = document.getElementById('app');
   const usernameInput = document.getElementById('usernameInput');
   const connectBtn = document.getElementById('connectBtn');
-  const statusEl = document.getElementById('status');
+  const accountNameEl = document.getElementById('accountName');
+  const accountStatusEl = document.getElementById('accountStatus');
+  const logoutBtn = document.getElementById('logoutBtn');
   const groupsDiv = document.getElementById('groups');
-  const chatHeader = document.getElementById('chatHeader');
+  const groupNameEl = document.getElementById('groupName');
+  const onlineCountEl = document.getElementById('onlineCount');
   const messagesDiv = document.getElementById('messages');
   const inputArea = document.getElementById('inputArea');
   const messageInput = document.getElementById('messageInput');
@@ -358,12 +321,7 @@
   const localAudio = document.getElementById('localAudio');
   const remoteAudio = document.getElementById('remoteAudio');
 
-  // === Утилиты ===
-  const showStatus = (msg, isError = false) => {
-    statusEl.textContent = msg;
-    statusEl.style.color = isError ? '#ff6b6b' : '#a4b0be';
-  };
-
+  // === Вспомогательные функции ===
   const addMessage = (usernameMsg, text, isYou = false, isSystem = false, time = Date.now()) => {
     const div = document.createElement('div');
     div.className = `msg ${isSystem ? 'system' : isYou ? 'you' : 'other'}`;
@@ -373,6 +331,40 @@
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   };
 
+  const updateOnlineCount = (count) => {
+    onlineCountEl.textContent = `👥 ${count} онлайн`;
+  };
+
+  const setAccountStatus = (online = false) => {
+    accountStatusEl.textContent = online ? '✅ онлайн' : '⭕ оффлайн';
+    accountStatusEl.style.color = online ? '#2ed573' : '#ff6b6b';
+  };
+
+  // === Работа с аккаунтом ===
+  const loadAccount = () => {
+    const saved = localStorage.getItem('kotochat_account');
+    if (saved) {
+      try {
+        const acc = JSON.parse(saved);
+        usernameInput.value = acc.username;
+        return acc;
+      } catch (e) {
+        localStorage.removeItem('kotochat_account');
+      }
+    }
+    return null;
+  };
+
+  const saveAccount = (username, id) => {
+    localStorage.setItem('kotochat_account', JSON.stringify({ username, id, timestamp: Date.now() }));
+  };
+
+  const clearAccount = () => {
+    localStorage.removeItem('kotochat_account');
+    accountId = null;
+    username = '';
+  };
+
   // === Группы ===
   const addGroupButtons = () => {
     groupsDiv.innerHTML = '';
@@ -380,92 +372,106 @@
       const btn = document.createElement('button');
       btn.textContent = group;
       btn.className = 'group-btn';
-      btn.dataset.group = group;
       btn.onclick = () => switchGroup(group);
       groupsDiv.appendChild(btn);
     });
   };
 
-  const updateActiveGroupButton = () => {
+  const updateActiveGroup = () => {
     document.querySelectorAll('.group-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.group === currentGroup);
+      btn.classList.toggle('active', btn.textContent === currentGroup);
     });
   };
 
   const switchGroup = (group) => {
-    if (!connected) return showStatus('Сначала подключитесь', true);
+    if (!connected) return;
     if (group === currentGroup) return;
 
-    hangupCall(); // завершить звонок при смене группы
+    // Завершить звонок при смене группы
+    hangupCall();
 
     currentGroup = group;
-    chatHeader.textContent = `Группа: ${group}`;
+    groupNameEl.textContent = `Группа: ${group}`;
     messagesDiv.innerHTML = '';
-    updateActiveGroupButton();
-    ws.send(JSON.stringify({ type: 'join', username, group }));
-    inputArea.classList.remove('hidden');
-    callArea.classList.remove('hidden');
+    updateActiveGroup();
+    
+    ws.send(JSON.stringify({ type: 'join', username, accountId, group }));
+    inputArea.style.display = 'flex';
+    callArea.style.display = 'flex';
   };
 
   // === WebSocket ===
   const connect = () => {
-    username = usernameInput.value.trim();
-    if (!username) return showStatus('Введите имя', true);
+    const name = usernameInput.value.trim();
+    if (!name) return alert('Введите имя');
 
     if (ws) ws.close();
 
-    ws = new WebSocket(DEFAULT_WS_URL);
-    showStatus('Подключение...');
+    ws = new WebSocket(WS_URL);
+    loginScreen.classList.add('hidden');
 
     ws.onopen = () => {
-      connected = true;
-      showStatus('✅ Подключено');
+      console.log('✅ Подключено к серверу');
+      // Генерируем уникальный ID аккаунта (можно заменить на UUID в будущем)
+      accountId = 'u_' + Math.random().toString(36).substr(2, 9);
+      username = name;
+      
+      saveAccount(username, accountId);
+      accountNameEl.textContent = username;
+      setAccountStatus(true);
+      accountStatusEl.style.display = 'block';
+      
+      ws.send(JSON.stringify({ type: 'login', username, accountId }));
       addGroupButtons();
-      inputArea.classList.add('hidden');
-      callArea.classList.add('hidden');
-      currentGroup = '';
-      messagesDiv.innerHTML = '';
-      localStorage.setItem('messengerUsername', username);
     };
 
-    ws.onerror = () => {
-      showStatus('❌ Ошибка подключения', true);
-      connected = false;
+    ws.onerror = (e) => {
+      console.error('❌ WebSocket error:', e);
+      alert('Ошибка подключения');
+      logout();
     };
 
     ws.onclose = () => {
+      console.log('🔌 Соединение закрыто');
       connected = false;
-      showStatus('Соединение закрыто');
-      inputArea.classList.add('hidden');
-      callArea.classList.add('hidden');
-      messagesDiv.innerHTML = '';
-      currentGroup = '';
-      hangupCall();
-      updateActiveGroupButton();
+      setAccountStatus(false);
+      if (loginScreen.classList.contains('hidden')) {
+        alert('Соединение с сервером потеряно. Повторите вход.');
+        logout();
+      }
     };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         switch (data.type) {
-          case 'history':
-            messagesDiv.innerHTML = '';
-            (data.messages || []).forEach(msg => {
-              addMessage(msg.username, msg.text, msg.username === username, false, msg.timestamp);
-            });
+          case 'login_success':
+            connected = true;
+            addMessage('Система', `Добро пожаловать, ${username}!`, false, true);
             break;
-          case 'message':
-            addMessage(data.username, data.text, data.username === username, false, data.timestamp);
-            if (data.username !== username && Notification.permission === 'granted') {
-              new Notification(`Новое сообщение в ${currentGroup}`, {
-                body: `${data.username}: ${data.text}`,
-                icon: 'https://cdn-icons-png.flaticon.com/512/2526/2526410.png'
-              });
-            }
+          
+          case 'login_failure':
+            alert(`Имя "${data.username}" уже занято. Попробуйте другое.`);
+            logout();
             break;
+
+          case 'join_ack':
+            updateOnlineCount(data.onlineCount || 0);
+            addMessage('Система', `Вы вошли в группу "${data.group}"`, false, true);
+            break;
+
           case 'notification':
             addMessage('Система', data.text, false, true);
             break;
+
+          case 'message':
+            addMessage(data.username, data.text, data.accountId === accountId, false, data.timestamp);
+            break;
+
+          case 'online_update':
+            updateOnlineCount(data.count);
+            break;
+
           case 'signal':
             handleSignal(data);
             break;
@@ -476,29 +482,54 @@
     };
   };
 
+  // === Выход ===
+  const logout = () => {
+    if (ws) {
+      ws.close();
+      ws = null;
+    }
+    hangupCall();
+    clearAccount();
+    loginScreen.classList.remove('hidden');
+    app.classList.add('hidden');
+    messagesDiv.innerHTML = '';
+    currentGroup = '';
+  };
+
   // === Отправка сообщений ===
   const sendMessage = () => {
     const text = messageInput.value.trim();
     if (!text || !currentGroup) return;
-    ws.send(JSON.stringify({ type: 'message', text, group: currentGroup }));
+    ws.send(JSON.stringify({ 
+      type: 'message', 
+      text, 
+      username, 
+      accountId,
+      group: currentGroup 
+    }));
     messageInput.value = '';
-    messageInput.focus();
   };
 
-  // === WebRTC ===
+  // === WebRTC (упрощённо) ===
+  const STUN_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
+
   const createPeerConnection = (target) => {
     if (peerConnection) peerConnection.close();
     peerConnection = new RTCPeerConnection({ iceServers: STUN_SERVERS });
 
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        ws.send(JSON.stringify({ type: 'signal', to: target, signalData: { candidate: event.candidate } }));
+        ws.send(JSON.stringify({ 
+          type: 'signal', 
+          to: target, 
+          from: accountId,
+          signalData: { candidate: event.candidate } 
+        }));
       }
     };
 
     peerConnection.ontrack = (event) => {
       remoteAudio.srcObject = event.streams[0];
-      remoteAudio.style.display = 'block';
     };
 
     peerConnection.onconnectionstatechange = () => {
@@ -511,29 +542,31 @@
   };
 
   const startCall = async () => {
-    if (!currentGroup) return showStatus('Выберите группу', true);
+    if (!currentGroup) return alert('Выберите группу');
     if (peerConnection) return;
 
     try {
       localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localAudio.srcObject = localStream;
-      localAudio.style.display = 'block';
 
       createPeerConnection(currentGroup);
       localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
-      ws.send(JSON.stringify({ type: 'signal', to: currentGroup, signalData: { sdp: peerConnection.localDescription } }));
+      ws.send(JSON.stringify({ 
+        type: 'signal', 
+        to: currentGroup, 
+        from: accountId,
+        signalData: { sdp: peerConnection.localDescription } 
+      }));
 
       callBtn.disabled = true;
       hangupBtn.disabled = false;
-      showStatus('📞 Звонок инициирован...');
+      addMessage('Система', '📞 Звонок инициирован...', false, true);
 
     } catch (err) {
-      showStatus(err.name === 'NotAllowedError' 
-        ? 'Разрешите доступ к микрофону' 
-        : `Ошибка звонка: ${err.message}`, true);
+      alert(err.name === 'NotAllowedError' ? 'Разрешите доступ к микрофону' : `Ошибка: ${err.message}`);
       hangupCall();
     }
   };
@@ -544,7 +577,6 @@
         createPeerConnection(data.from);
         peerConnection.ontrack = (event) => {
           remoteAudio.srcObject = event.streams[0];
-          remoteAudio.style.display = 'block';
         };
       }
 
@@ -558,17 +590,21 @@
           }
           const answer = await peerConnection.createAnswer();
           await peerConnection.setLocalDescription(answer);
-          ws.send(JSON.stringify({ type: 'signal', to: data.from, signalData: { sdp: peerConnection.localDescription } }));
+          ws.send(JSON.stringify({ 
+            type: 'signal', 
+            to: data.from, 
+            from: accountId,
+            signalData: { sdp: peerConnection.localDescription } 
+          }));
           callBtn.disabled = true;
           hangupBtn.disabled = false;
-          showStatus('📞 Входящий звонок');
+          addMessage('Система', '📞 Входящий звонок', false, true);
         }
       } else if (data.signalData.candidate) {
         await peerConnection.addIceCandidate(new RTCIceCandidate(data.signalData.candidate));
       }
     } catch (err) {
-      console.error('WebRTC ошибка:', err);
-      showStatus(`WebRTC: ${err.message}`, true);
+      console.error('WebRTC error:', err);
       hangupCall();
     }
   };
@@ -582,24 +618,29 @@
       localStream.getTracks().forEach(t => t.stop());
       localStream = null;
     }
-    localAudio.style.display = 'none';
-    remoteAudio.style.display = 'none';
     callBtn.disabled = false;
     hangupBtn.disabled = true;
   };
 
   // === Инициализация ===
   (() => {
-    const saved = localStorage.getItem('messengerUsername');
-    if (saved) usernameInput.value = saved;
+    // Загрузка сохранённого аккаунта
+    const saved = loadAccount();
+    if (saved && saved.username) {
+      usernameInput.value = saved.username;
+      // Можно автоматически войти — но лучше дать пользователю подтвердить
+    }
 
+    // События
     connectBtn.onclick = connect;
+    logoutBtn.onclick = logout;
     sendBtn.onclick = sendMessage;
-    messageInput.onkeyup = (e) => { if (e.key === 'Enter' && !e.shiftKey) sendMessage(); };
+    messageInput.onkeyup = (e) => { if (e.key === 'Enter') sendMessage(); };
     callBtn.onclick = startCall;
     hangupBtn.onclick = hangupCall;
 
-    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+    // Уведомления
+    if (Notification.permission === 'default') {
       Notification.requestPermission();
     }
   })();
