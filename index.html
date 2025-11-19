@@ -1,163 +1,133 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Коточат 🐾</title>
+<meta charset="UTF-8" />
+<title>KotoChat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:system-ui,-apple-system,Segoe UI,sans-serif; background:#f8f9fa; height:100vh; overflow:hidden; }
-#screen { display:flex; flex-direction:column; height:100%; }
-#login { background:linear-gradient(135deg,#4a90e2,#74b9ff); color:white; padding:20px; text-align:center; flex:1; display:flex; flex-direction:column; justify-content:center; gap:20px; }
-#login h1 { font-size:2rem; }
-#user { padding:14px; font-size:1.1rem; border-radius:30px; border:none; width:280px; max-width:90%; text-align:center; }
-#go { background:white; color:#4a90e2; border:none; border-radius:30px; padding:14px 30px; font-size:1.1rem; font-weight:bold; cursor:pointer; }
-#app { display:none; flex:1; flex-direction:column; }
-#top { background:#6c5ce7; color:white; padding:12px 16px; display:flex; justify-content:space-between; font-weight:bold; }
-#main { flex:1; display:flex; flex-direction:column; }
-#msgs { flex:1; padding:16px; overflow-y:auto; background:#f1f2f6; }
-.msg { max-width:75%; padding:10px 14px; border-radius:18px; margin:8px 0; line-height:1.4; word-break:break-word; }
-.msg.you { background:#00b894; color:white; align-self:flex-end; margin-left:auto; }
-.msg.other { background:#dfe6e9; color:#2d3436; align-self:flex-start; }
-.msg.sys { background:#fdcb6e; color:#e17055; text-align:center; font-style:italic; }
-#input { padding:12px; background:#ecf0f1; display:flex; gap:10px; }
-#txt { flex:1; padding:12px; border-radius:20px; border:none; outline:none; }
-#send { background:#6c5ce7; color:white; border:none; border-radius:20px; padding:0 24px; font-weight:bold; cursor:pointer; }
-
-/* Мобильная адаптация */
-@media (max-width:600px) {
-  #screen { font-size:14px; }
-  .msg { max-width:85%; }
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #e5ddd5;
+}
+#login {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+  margin: 80px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+}
+#chat {
+  display: none;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+#users {
+  background: white;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+.msg {
+  background: white;
+  padding: 8px 12px;
+  margin: 5px 0;
+  border-radius: 10px;
+  width: fit-content;
+}
+.me {
+  background: #dcf8c6;
+  margin-left: auto;
+}
+#sendBox {
+  display: flex;
+  padding: 10px;
+  background: white;
+}
+#sendBox input {
+  flex: 1;
+  padding: 8px;
+  margin-right: 10px;
 }
 </style>
 </head>
 <body>
 
-<div id="screen">
-  <div id="login">
-    <h1>Коточат 🐾</h1>
-    <input id="user" type="text" placeholder="Ваше имя (2–20 символов)" maxlength="20" autocomplete="off">
-    <button id="go">Войти в чат</button>
-  </div>
+<div id="login">
+  <h2>KotoChat</h2>
+  <input id="name" placeholder="Введите имя" />
+  <button onclick="login()">Войти</button>
+</div>
 
-  <div id="app">
-    <div id="top">
-      <span id="grp">Выберите группу</span>
-      <span id="cnt">—</span>
-    </div>
-    <div id="main">
-      <div id="msgs"></div>
-      <div id="input">
-        <input id="txt" type="text" placeholder="Сообщение..." disabled>
-        <button id="send" disabled>➤</button>
-      </div>
-    </div>
+<div id="chat">
+  <div id="users">Пользователи: ...</div>
+  <div id="messages"></div>
+
+  <div id="sendBox">
+    <input id="text" placeholder="Сообщение..." onkeydown="if(event.key==='Enter') send()" />
+    <button onclick="send()">➤</button>
   </div>
 </div>
 
 <script>
-(() => {
-  const WS_URL = 'wss://kotochat-e22r.onrender.com';
-  const GROUPS = ['Общий', 'Работа', 'Друзья'];
-  
-  let ws = null;
-  let accountId = null;
-  let currentGroup = '';
-  
-  const login = document.getElementById('login');
-  const app = document.getElementById('app');
-  const userInp = document.getElementById('user');
-  const goBtn = document.getElementById('go');
-  const grpEl = document.getElementById('grp');
-  const cntEl = document.getElementById('cnt');
-  const msgs = document.getElementById('msgs');
-  const txtInp = document.getElementById('txt');
-  const sendBtn = document.getElementById('send');
+let ws;
+let myName = "";
 
-  // Восстановление имени
-  const saved = localStorage.getItem('koto_user');
-  if (saved) userInp.value = saved;
+function login() {
+  myName = document.getElementById("name").value.trim();
+  if (!myName) return alert("Введите имя");
 
-  goBtn.onclick = () => {
-    const name = userInp.value.trim();
-    if (name.length < 2 || name.length > 20) return alert('Имя: 2–20 символов');
-    
-    ws = new WebSocket(WS_URL);
-    
-    ws.onopen = () => {
-      const id = 'u_' + Math.random().toString(36).substr(2, 9);
-      ws.send(JSON.stringify({ type: 'login', username: name, accountId: id }));
-    };
+  ws = new WebSocket(location.origin.replace("http", "ws") + "/ws");
 
-    ws.onmessage = (e) => {
-      const d = JSON.parse(e.data);
-      switch (d.type) {
-        case 'login_success':
-          localStorage.setItem('koto_user', name);
-          login.style.display = 'none';
-          app.style.display = 'flex';
-          showGroups();
-          addMsg('Система', `Добро пожаловать, ${name}!`, true);
-          break;
-        case 'login_failure':
-          alert(`Имя "${d.username}" занято`);
-          break;
-        case 'join_ack':
-          currentGroup = d.group;
-          grpEl.textContent = `💬 ${d.group}`;
-          cntEl.textContent = `👥 ${d.onlineCount}`;
-          txtInp.disabled = false;
-          sendBtn.disabled = false;
-          addMsg('Система', `Группа: ${d.group}`, true);
-          break;
-        case 'notification': addMsg('🔔', d.text, true); break;
-        case 'message': addMsg(d.username, d.text, d.accountId === accountId); break;
-      }
-    };
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: "login", name: myName }));
 
-    ws.onclose = ws.onerror = () => {
-      if (app.style.display === 'flex') {
-        alert('Соединение с сервером потеряно');
-        location.reload();
-      }
-    };
+    document.getElementById("login").style.display = "none";
+    document.getElementById("chat").style.display = "flex";
   };
 
-  function showGroups() {
-    const popup = document.createElement('div');
-    popup.innerHTML = `
-      <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center">
-        <div style="background:white;border-radius:12px;padding:20px;width:90%;max-width:300px">
-          <h3 style="margin:0 0 15px;text-align:center">Выберите группу</h3>
-          ${GROUPS.map(g => `<button onclick="join('${g}')" style="display:block;width:100%;padding:12px;margin:8px 0;background:#74b9ff;color:white;border:none;border-radius:8px;cursor:pointer">${g}</button>`).join('')}
-        </div>
-      </div>`;
-    document.body.appendChild(popup);
-    window.join = (g) => {
-      popup.remove();
-      ws.send(JSON.stringify({ type: 'join', group: g, username: userInp.value }));
-    };
-  }
+  ws.onmessage = e => {
+    const data = JSON.parse(e.data);
 
-  function addMsg(user, text, isSys = false, isYou = false) {
-    const div = document.createElement('div');
-    div.className = `msg ${isSys ? 'sys' : isYou ? 'you' : 'other'}`;
-    const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    div.innerHTML = `<b>${user}</b>: ${text} <small>(${t})</small>`;
-    msgs.appendChild(div);
-    msgs.scrollTop = msgs.scrollHeight;
-  }
+    if (data.type === "users") {
+      document.getElementById("users").innerText =
+        "Пользователи: " + data.list.join(", ");
+    }
 
-  sendBtn.onclick = () => {
-    const t = txtInp.value.trim();
-    if (t) {
-      ws.send(JSON.stringify({ type: 'message', text: t }));
-      txtInp.value = '';
+    if (data.type === "message") {
+      addMsg(data.name, data.text);
+    }
+
+    if (data.type === "system") {
+      addMsg("Система", data.text);
     }
   };
+}
 
-  txtInp.onkeypress = (e) => { if (e.key === 'Enter') sendBtn.click(); };
-})();
+function addMsg(name, text) {
+  const box = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "msg" + (name === myName ? " me" : "");
+  div.innerText = name + ": " + text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function send() {
+  const t = document.getElementById("text");
+  if (!t.value.trim()) return;
+
+  ws.send(JSON.stringify({ type: "message", text: t.value }));
+  t.value = "";
+}
 </script>
 
 </body>
